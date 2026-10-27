@@ -61,9 +61,10 @@ export function actual(input: PricingRule, params: Record<string, unknown>, resp
   const rule = validatePricingRule(input);
   const payload = record(response);
   if (rule.unit === "per_image") {
-    count(params.n ?? 1, "图片张数");
+    const requested = count(params.n ?? 1, "图片张数");
     invariant(Array.isArray(payload?.data), 422, "invalid_upstream_usage", "上游未返回有效图片列表");
-    return credits(new ExactDecimal(imagePrice(rule, params.size)).times(payload.data.length));
+    // 上游多返回的图片不计费：用户只为请求的张数付费。
+    return credits(new ExactDecimal(imagePrice(rule, params.size)).times(Math.min(payload.data.length, requested)));
   }
   if (rule.unit === "per_1k_tokens") {
     const usage = record(payload?.usage) ?? record(record(payload?.response)?.usage);

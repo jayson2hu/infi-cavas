@@ -16,6 +16,11 @@ test("图片按最长边 1536/1537 分档并按实际图片数量结算", () => 
   expect(actual(image, {}, { data: [] })).toBe(0);
 });
 
+test("上游多返回的图片不计费，最多按请求张数结算", () => {
+  expect(actual(image, { n: 1, size: "1024x1024" }, { data: [{ b64_json: "a" }, { b64_json: "b" }, { b64_json: "c" }, { b64_json: "d" }] })).toBe(4);
+  expect(actual(image, { n: "2", size: "2048x2048" }, { data: [{ b64_json: "a" }, { b64_json: "b" }, { b64_json: "c" }] })).toBe(16);
+});
+
 test("视频估价和实际计价都按秒数，支持 multipart 数字字符串并向上取整", () => {
   expect(estimate(video, { seconds: "6" })).toBe(72);
   expect(actual(video, { seconds: 6 })).toBe(72);

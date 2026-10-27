@@ -38,6 +38,7 @@
 
 | I-030 | 文档types:check中Next typegen偶发把生成的.source/server.ts留为空，TS2306 | 已调整检查顺序为Next路由类型→完整fumadocs-mdx→tsc；避免后一个生成器破坏前一个的结果，不更换依赖。最终连续两次验证均通过，见m5-docs.md。已解决。 |
 | I-031 | 真实 HTTP 部署时 Bun.serve 默认 10 秒空闲超时会断开生图、SSE 与视频下载（此前验收均经 app.request，未走真实 socket） | 新增 `server/src/lib/serve.ts`，对 `/api/gateway/*` 调用 `server.timeout(req, 0)`，超时仍由上游 AbortSignal 控制；`tests/serve.test.ts` 以真实 Bun.serve 跑 11 秒请求通过。已解决。 |
+| I-032 | 上游多返回图片时按返回数量计费，可能超出用户请求张数并触发补扣 | `actual()` 改为按 min(返回张数, n) 计价，补充单测。已解决。 |
 
 ## 记录原则
 
