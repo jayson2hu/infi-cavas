@@ -8,6 +8,7 @@ import { AgentPanel } from "@/components/agent/agent-panel";
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { VersionReleaseModal } from "@/components/layout/version-release-modal";
+import { useLocalAgentAllowed } from "@/lib/platform";
 import { BRAND_NAME } from "@/constant/runtime-config";
 import { createWorkspace } from "@/services/api/platform/workspaces";
 import { fetchBillingSummary } from "@/services/api/platform/billing";
@@ -43,12 +44,13 @@ export default function WorkspaceLayout({ children }: { children?: ReactNode }) 
     const agentConnected = useAgentStore((state) => state.connected);
     const connectAgent = useAgentStore((state) => state.connectAgent);
     const toggleAgent = useAgentStore((state) => state.togglePanel);
+    const agentAllowed = useLocalAgentAllowed();
     const autoConnect = useRef(false);
     useEffect(() => {
-        if (autoConnect.current || agentEnabled || agentConnected || !agentToken.trim()) return;
+        if (!agentAllowed || autoConnect.current || agentEnabled || agentConnected || !agentToken.trim()) return;
         autoConnect.current = true;
         void connectAgent({ silent: true });
-    }, [agentConnected, agentEnabled, agentToken, connectAgent]);
+    }, [agentAllowed, agentConnected, agentEnabled, agentToken, connectAgent]);
     const summary = useQuery({ queryKey: ["platform", "summary", user.id, workspaceId], queryFn: ({ signal }) => fetchBillingSummary(workspaceId, signal) });
     const changeWorkspace = async (id: string) => {
         try { await switchWorkspace(id); setMobileOpen(false); }
@@ -81,7 +83,7 @@ export default function WorkspaceLayout({ children }: { children?: ReactNode }) 
                 <span className="platform-topbar-workspace">{workspace?.name}</span>
                 <div className="platform-topbar-actions">
                     <CreditsBadge />
-                    <Button type="text" icon={<Bot size={18} />} aria-label={t("topNav.openAgent")} onClick={toggleAgent} />
+                    {agentAllowed ? <Button type="text" icon={<Bot size={18} />} aria-label={t("topNav.openAgent")} onClick={toggleAgent} /> : null}
                     <div className="platform-desktop-actions"><UserStatusActions /></div>
                     <Button className="platform-desktop-actions" type="text" onClick={() => navigate("/templates")}>{t("platform.templateCenter")}</Button>
                     <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate(`/canvas/${createProject()}`)}>{t("platform.newCanvas")}</Button>

@@ -8,7 +8,7 @@ import { canvasThemes } from "@/lib/canvas-theme";
 import { useCanvasSidePanelStore } from "@/stores/use-canvas-side-panel-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { DOCS_URL } from "@/constant/env";
-import { isPlatformEnabled } from "@/lib/platform";
+import { isPlatformEnabled, useLocalAgentAllowed } from "@/lib/platform";
 import { CreditsBadge } from "@/components/billing/credits-badge";
 import { BrandSelector } from "@/components/brand/brand-selector";
 
@@ -62,6 +62,7 @@ export function CanvasTopBar({
     const colorTheme = useThemeStore((state) => state.theme);
     const { t } = useTranslation();
     const theme = canvasThemes[colorTheme];
+    const agentAllowed = useLocalAgentAllowed();
     const titleRef = useRef<HTMLDivElement>(null);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const sidePanelOpen = useCanvasSidePanelStore((state) => state.panelOpen);
@@ -141,13 +142,14 @@ export function CanvasTopBar({
                             </button>
                         )}
                     </div>
-                    <CompactAgentStatus status={compactAgentStatus} onClick={onToggleAgent} />
+                    {agentAllowed ? <CompactAgentStatus status={compactAgentStatus} onClick={onToggleAgent} /> : null}
                 </div>
 
                 <div className="pointer-events-auto flex items-center gap-1.5">
                     {isPlatformEnabled() ? <BrandSelector compact /> : null}
                     {isPlatformEnabled() ? <CreditsBadge /> : null}
                     <UserStatusActions variant="canvas" onOpenShortcuts={() => setShortcutsOpen(true)} onOpenPlugins={onOpenPlugins} />
+                    {agentAllowed ? <>
                     <span className="h-6 w-px" style={{ background: theme.toolbar.border }} />
                     <Button
                         type="text"
@@ -158,6 +160,7 @@ export function CanvasTopBar({
                     >
                         Agent
                     </Button>
+                    </> : null}
                 </div>
             </div>
             <Modal title={t("canvas.shortcuts")} open={shortcutsOpen} onCancel={() => setShortcutsOpen(false)} footer={null} centered>

@@ -8,6 +8,11 @@ export const PLATFORM_CHANNEL_ID = "platform";
 export function isPlatformEnabled() { return Boolean(PLATFORM_API_BASE); }
 /** 平台模式下模型 Key 由管理后台统一管理；只有显式开启 ALLOW_BYOK（私有化部署）时用户才能自带 Key。纯前端模式始终可用。 */
 export function isByokAllowed() { return !isPlatformEnabled() || ALLOW_BYOK; }
+/** 本地 Agent（连接用户电脑上的 Codex）面向开发者：平台模式下仅平台管理员可见。 */
+export function useLocalAgentAllowed() {
+    const admin = useSessionStore((state) => Boolean(state.user?.isPlatformAdmin));
+    return !isPlatformEnabled() || admin;
+}
 
 export function isPlatformGatewayUrl(value: string) {
     if (!isPlatformEnabled()) return false;
