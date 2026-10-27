@@ -1,9 +1,10 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Modal, Tag, Timeline } from "antd";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useVersionCheck } from "@/hooks/use-version-check";
 import { APP_VERSION } from "@/constant/env";
+import { isPlatformEnabled } from "@/lib/platform";
 import upstreamLicense from "../../../../LICENSE?raw";
 
 function getTagColor(type: string) {
@@ -22,15 +23,17 @@ function releaseTypeLabel(type: string, t: TFunction) {
 type VersionReleaseModalProps = {
     className?: string;
     style?: CSSProperties;
+    /** 自定义触发入口（例如头像菜单里的"关于"）；不传时显示版本号按钮。 */
+    children?: (open: () => void) => ReactNode;
 };
 
-export function VersionReleaseModal({ className, style }: VersionReleaseModalProps) {
+export function VersionReleaseModal({ className, style, children }: VersionReleaseModalProps) {
     const { t } = useTranslation();
     const { open, setOpen, openReleaseModal, latestVersion, releases, checking, hasNewVersion, checkLatestRelease } = useVersionCheck();
 
     return (
         <>
-            <button
+            {children ? children(openReleaseModal) : <button
                 type="button"
                 className={className || "shrink-0 cursor-pointer text-xs font-medium text-stone-500 transition hover:text-stone-950 dark:text-stone-400 dark:hover:text-white"}
                 style={style}
@@ -41,19 +44,19 @@ export function VersionReleaseModal({ className, style }: VersionReleaseModalPro
                     {APP_VERSION}
                     {hasNewVersion ? <span className="absolute -right-1.5 -top-1 size-1.5 rounded-full bg-green-500" /> : null}
                 </span>
-            </button>
-            <Modal title={t("version.title")} open={open} width={680} centered footer={null} onCancel={() => setOpen(false)}>
+            </button>}
+            <Modal title={t(isPlatformEnabled() ? "platform.about" : "version.title")} open={open} width={680} centered footer={null} onCancel={() => setOpen(false)}>
                 <section className="mb-5 rounded-lg border border-stone-200 p-3 text-sm dark:border-stone-800" data-about-attribution>
                     <div className="flex flex-wrap items-center justify-between gap-2"><strong>{t("platform.aboutAttribution")}</strong><a className="underline underline-offset-2" href="https://github.com/basketikun/infinite-canvas" target="_blank" rel="noopener noreferrer">{t("platform.aboutUpstream")}</a></div>
                     <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">{t("platform.aboutLicenseNotice")}</p>
                     <details className="mt-3"><summary className="cursor-pointer text-xs">{t("platform.aboutLicense")}</summary><pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-5">{upstreamLicense}</pre></details>
                 </section>
-                <div className="mb-5 grid grid-cols-2 gap-3">
+                <div className={`mb-5 grid gap-3 ${isPlatformEnabled() ? "grid-cols-1" : "grid-cols-2"}`}>
                     <div className="rounded-lg border border-stone-200 p-3 dark:border-stone-800">
                         <div className="text-xs text-stone-500 dark:text-stone-400">{t("version.currentVersion")}</div>
                         <div className="mt-1 text-base font-semibold text-stone-950 dark:text-stone-100">{APP_VERSION}</div>
                     </div>
-                    <div className="rounded-lg border border-stone-200 p-3 dark:border-stone-800">
+                    {isPlatformEnabled() ? null : (<div className="rounded-lg border border-stone-200 p-3 dark:border-stone-800">
                         <div className="flex items-center justify-between gap-3">
                             <div className="text-xs text-stone-500 dark:text-stone-400">{t("version.latestVersion")}</div>
                             <button
@@ -65,7 +68,7 @@ export function VersionReleaseModal({ className, style }: VersionReleaseModalPro
                             </button>
                         </div>
                         <div className="mt-1 text-base font-semibold text-stone-950 dark:text-stone-100">{latestVersion}</div>
-                    </div>
+                    </div>)}
                 </div>
                 <div className="max-h-[56vh] overflow-y-auto pr-2">
                     <Timeline

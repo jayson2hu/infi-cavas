@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AgentPanel } from "@/components/agent/agent-panel";
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
+import { VersionReleaseModal } from "@/components/layout/version-release-modal";
 import { BRAND_NAME } from "@/constant/runtime-config";
 import { createWorkspace } from "@/services/api/platform/workspaces";
 import { fetchBillingSummary } from "@/services/api/platform/billing";
@@ -84,7 +85,7 @@ export default function WorkspaceLayout({ children }: { children?: ReactNode }) 
                     <div className="platform-desktop-actions"><UserStatusActions /></div>
                     <Button className="platform-desktop-actions" type="text" onClick={() => navigate("/templates")}>{t("platform.templateCenter")}</Button>
                     <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate(`/canvas/${createProject()}`)}>{t("platform.newCanvas")}</Button>
-                    <Dropdown trigger={["click"]} menu={{ items: [{ key: "name", label: <span>{user.name}<br /><small>{user.email}</small></span>, disabled: true }, { type: "divider" }, { key: "logout", label: t("platform.logout"), onClick: () => void logout().then(() => navigate("/login", { replace: true })).catch((error: Error) => message.error(error.message)) }] }}><button type="button" className="platform-avatar-button" aria-label={t("platform.accountMenu")}><Avatar src={user.avatarUrl}>{user.name.slice(0, 1)}</Avatar></button></Dropdown>
+                    <VersionReleaseModal>{(openAbout) => <Dropdown trigger={["click"]} menu={{ items: [{ key: "name", label: <span>{user.name}<br /><small>{user.email}</small></span>, disabled: true }, { type: "divider" }, { key: "about", label: t("platform.about"), onClick: openAbout }, { key: "logout", label: t("platform.logout"), onClick: () => void logout().then(() => navigate("/login", { replace: true })).catch((error: Error) => message.error(error.message)) }] }}><button type="button" className="platform-avatar-button" aria-label={t("platform.accountMenu")}><Avatar src={user.avatarUrl}>{user.name.slice(0, 1)}</Avatar></button></Dropdown>}</VersionReleaseModal>
                 </div>
             </header>
             <div className="platform-workspace-content" key={`${user.id}:${workspaceId}`}>{children || <Outlet />}</div>

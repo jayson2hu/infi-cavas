@@ -3,6 +3,7 @@ import { App } from "antd";
 import { useTranslation } from "react-i18next";
 import { APP_VERSION } from "@/constant/env";
 import { parseChangelog, type ReleaseInfo } from "@/lib/release";
+import { isPlatformEnabled } from "@/lib/platform";
 
 const latestVersionUrl = "https://raw.githubusercontent.com/basketikun/infinite-canvas/main/VERSION";
 const latestChangelogUrl = "https://raw.githubusercontent.com/basketikun/infinite-canvas/main/CHANGELOG.md";
@@ -70,14 +71,16 @@ export function useVersionCheck() {
         [currentVersion, localReleases, message, t],
     );
 
+    // 平台模式面向终端用户：不向上游仓库查询新版本，只展示本产品自带的更新记录。
+    const upstreamCheck = !isPlatformEnabled();
     useEffect(() => {
-        void checkLatestVersion();
-    }, [checkLatestVersion]);
+        if (upstreamCheck) void checkLatestVersion();
+    }, [checkLatestVersion, upstreamCheck]);
 
     const openReleaseModal = useCallback(() => {
         setOpen(true);
-        void checkLatestRelease();
-    }, [checkLatestRelease]);
+        if (upstreamCheck) void checkLatestRelease();
+    }, [checkLatestRelease, upstreamCheck]);
 
     return {
         open,
