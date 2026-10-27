@@ -1,4 +1,6 @@
 import axios from "axios";
+import { platformHeaders } from "@/lib/platform";
+import "./platform/gateway-observer";
 
 import i18n from "@/i18n";
 import { audioMimeType, normalizeAudioFormatValue, normalizeAudioSpeedValue, normalizeAudioVoiceValue } from "@/lib/audio-generation";
@@ -16,12 +18,14 @@ function aiApiUrl(config: AiConfig, path: string) {
 function aiHeaders(config: AiConfig) {
     return {
         Authorization: `Bearer ${config.apiKey}`,
+        ...platformHeaders(config),
         "Content-Type": "application/json",
     };
 }
 
 export async function requestAudioGeneration(config: AiConfig, prompt: string, options?: RequestOptions): Promise<Blob> {
     const requestConfig = resolveModelRequestConfig(config, config.model || config.audioModel);
+    const instructions = [requestConfig.brandInstructions, config.audioInstructions.trim()].filter(Boolean).join("\n\n");
     const model = requestConfig.model.trim();
     const format = normalizeAudioFormatValue(config.audioFormat);
     const script = resolveModelScript(config, config.model || config.audioModel);
@@ -35,7 +39,7 @@ export async function requestAudioGeneration(config: AiConfig, prompt: string, o
                 script,
                 config: requestConfig,
                 prompt,
-                params: { voice: normalizeAudioVoiceValue(config.audioVoice), format, speed: normalizeAudioSpeedValue(config.audioSpeed), instructions: config.audioInstructions.trim() },
+                params: { voice: normalizeAudioVoiceValue(config.audioVoice), format, speed: normalizeAudioSpeedValue(config.audioSpeed), instructions },
                 signal: options?.signal,
             });
             return await audioPluginBlob(result, format);
@@ -44,7 +48,6 @@ export async function requestAudioGeneration(config: AiConfig, prompt: string, o
         }
     }
     assertAudioConfig(requestConfig, model);
-    const instructions = config.audioInstructions.trim();
 
     try {
         const response = await axios.post<Blob>(

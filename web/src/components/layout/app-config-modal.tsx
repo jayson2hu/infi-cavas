@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ModelPicker } from "@/components/model-picker";
 import { videoResolutionOptions } from "@/components/video-settings-panel";
 import { ChannelEditorDrawer } from "@/components/layout/channel-editor-drawer";
+import { isPlatformEnabled } from "@/lib/platform";
 import { ConfigLocalProxy } from "@/components/layout/config-local-proxy";
 import { ConfigPromptSources } from "@/components/layout/config-prompt-sources";
 import { ConfigLocalStorage } from "@/components/layout/config-local-storage";
@@ -185,11 +186,11 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
                 items={[
                     {
                         key: "channels",
-                        label: t("config.tabs.channels"),
+                        label: t(isPlatformEnabled() ? "platform.byokTitle" : "config.tabs.channels"),
                         children: (
                             <div>
                                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                    <div className="text-xs text-stone-500">{t("config.channels.description")}</div>
+                                    <div className="text-xs text-stone-500">{t(isPlatformEnabled() ? "platform.byokDescription" : "config.channels.description")}</div>
                                     <Button type="primary" icon={<Plus className="size-4" />} onClick={addChannel}>
                                         {t("config.channels.add")}
                                     </Button>
@@ -204,10 +205,12 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
                                                 </div>
                                             </div>
                                             <div className="flex shrink-0 gap-2">
+                                                {channel.readonly ? <span className="text-xs text-stone-500">{t("platform.managedChannel")}</span> : <>
                                                 <Button size="small" icon={<Pencil className="size-3.5" />} onClick={() => setEditingChannelId(channel.id)}>
                                                     {t("common.edit")}
                                                 </Button>
                                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} onClick={() => deleteChannel(channel.id)} />
+                                                </>}
                                             </div>
                                         </div>
                                     ))}

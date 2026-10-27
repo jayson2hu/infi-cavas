@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useVersionCheck } from "@/hooks/use-version-check";
 import { APP_VERSION } from "@/constant/env";
+import upstreamLicense from "../../../../LICENSE?raw";
 
 function getTagColor(type: string) {
     if (type === "新增" || type === "Added") return "green";
@@ -42,6 +43,11 @@ export function VersionReleaseModal({ className, style }: VersionReleaseModalPro
                 </span>
             </button>
             <Modal title={t("version.title")} open={open} width={680} centered footer={null} onCancel={() => setOpen(false)}>
+                <section className="mb-5 rounded-lg border border-stone-200 p-3 text-sm dark:border-stone-800" data-about-attribution>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><strong>{t("platform.aboutAttribution")}</strong><a className="underline underline-offset-2" href="https://github.com/basketikun/infinite-canvas" target="_blank" rel="noopener noreferrer">{t("platform.aboutUpstream")}</a></div>
+                    <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">{t("platform.aboutLicenseNotice")}</p>
+                    <details className="mt-3"><summary className="cursor-pointer text-xs">{t("platform.aboutLicense")}</summary><pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-5">{upstreamLicense}</pre></details>
+                </section>
                 <div className="mb-5 grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-stone-200 p-3 dark:border-stone-800">
                         <div className="text-xs text-stone-500 dark:text-stone-400">{t("version.currentVersion")}</div>

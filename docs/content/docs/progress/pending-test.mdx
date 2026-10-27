@@ -5,6 +5,19 @@ description: Implemented changes that still need manual verification
 
 # Pending Tests
 
+## 平台模式自动验收与待验证
+
+The implementation and locally executable acceptance checks have passed within the scope confirmed by the user. Unverified deployment and external provider capabilities below remain follow-up items; production acceptance is not claimed.
+
+- M0/M1已通过类型检查、PostgreSQL结构等价、账号权限/邀请事务及前端会话测试；注册、登录、团队邀请、额度、成员权限的独立浏览器验收已通过。
+- M2已实现网关、点数账本、兑换、周期、管理接口与计费界面；真实gpt-image-2请求已验证生成、4点结算和S3读回。
+- 网关安全回归覆盖取消/退款竞争、SSE终态与密钥脱敏；前端旧账号/旧工作区响应隔离回归已通过。
+- M3品牌页面、权限、上传固化、300ms注入预览、强制品牌和SKU拖入/ZIP原图验收已通过；画布侧栏Logo/风格参考/规则摘要补验通过。真实品牌参考图编辑已验证上游请求与预览一致、仅扣4点及S3归档。
+- 真实供应商返回图像尺寸与请求不同，已记录实际1374x1145与请求1024x1024的差异。详细证据见仓库 `docs/development/acceptance.md` 与 `issues.md`。
+- M4模板中心、变量/SKU输入、插入撤销、步骤运行、停止续跑和保存团队模板已完成本机验收；后端93项/878断言及转换核心12项/58断言通过，最终六套界面流程27组和视频刷新恢复6组通过，使用受控上游。
+- M5真实数据首页、免计费提示、关于MIT、自动迁移/seed本机验收通过；三模式18组与首页补验3组通过，后端最终98项/936断言、前端42项/133顶层断言通过。真实完整电商8图84.84秒、扣40点和8份归档通过；生产Docker/MinIO与独立文档Windows打包仍有环境门槛。
+- 供应商虽列出gpt-5.5，但实际文本接口拒绝调用，冻结10点已全额退款；真实文本成功、视频/语音供应商能力以及干净机器Docker部署仍未验收。
+
 The current release needs manual verification in these areas:
 
 - Saved model selection: save a canvas node with a model, then remove its provider or remove that model while another video model remains the default. Generation, retry and pending-video recovery should keep the unavailable model selected and open configuration instead of sending a request to the default or first provider. Re-selecting a valid model should allow generation. Changing only the API key on the same provider should preserve the model; switching a config node from a valid image model to video should still use the video default.

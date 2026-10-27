@@ -1,5 +1,6 @@
 import type { ThemeConfig } from "antd";
 import { theme as antdTheme } from "antd";
+import { isPlatformEnabled } from "@/lib/platform";
 
 const neutral = {
     light: {
@@ -29,7 +30,8 @@ const neutral = {
 };
 
 export function getAntThemeConfig(dark: boolean): ThemeConfig {
-    const color = dark ? neutral.dark : neutral.light;
+    const baseColor = dark ? neutral.dark : neutral.light;
+    const color = isPlatformEnabled() ? { ...baseColor, primary: dark ? "#fafaf9" : "#1c1917", elevatedBg: dark ? "#292524" : "#fbfaf7" } : baseColor;
 
     return {
         algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
@@ -45,6 +47,16 @@ export function getAntThemeConfig(dark: boolean): ThemeConfig {
             controlItemBgHover: color.itemHoverBg,
             controlItemBgActive: color.itemSelectedBg,
             controlItemBgActiveHover: color.itemSelectedHoverBg,
+            ...(isPlatformEnabled() ? {
+                colorPrimary: dark ? "#fafaf9" : "#1c1917",
+                colorBgContainer: dark ? "#211e1b" : "#fbfaf7",
+                colorBgElevated: dark ? "#292524" : "#fbfaf7",
+                colorBorder: dark ? "#44403c" : "#e3dfd6",
+                colorText: dark ? "#f5f5f4" : "#1c1917",
+                colorTextSecondary: dark ? "#a8a29e" : "#57534e",
+                borderRadius: 10,
+                fontFamily: 'Inter,"Noto Sans SC",system-ui,sans-serif',
+            } : {}),
         },
         components: {
             Button: {

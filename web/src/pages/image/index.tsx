@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { ImageSettingsPanel } from "@/components/image-settings-panel";
 import { ModelPicker } from "@/components/model-picker";
+import { GenerationCost, useGenerationCredits } from "@/components/billing/generation-cost";
 import { PromptSelectDialog } from "@/components/prompts/prompt-select-dialog";
 import { AssetPickerModal, type InsertAssetPayload } from "@/components/canvas/asset-picker-modal";
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -74,7 +75,7 @@ export default function ImagePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dragDepthRef = useRef(0);
     const config = useConfigStore((state) => state.config);
-    const effectiveConfig = useEffectiveConfig();
+    const effectiveConfig = useEffectiveConfig({ source: "image-workbench" });
     const updateConfig = useConfigStore((state) => state.updateConfig);
     const isAiConfigReady = useConfigStore((state) => state.isAiConfigReady);
     const openConfigDialog = useConfigStore((state) => state.openConfigDialog);
@@ -103,7 +104,9 @@ export default function ImagePage() {
 
     const model = effectiveConfig.imageModel || effectiveConfig.model;
     const canGenerate = Boolean(prompt.trim());
-    const generationCount = Math.max(1, Math.min(10, Number(config.count) || 1));
+    const generationCount = Math.max(1, Math.min(10, Number(effectiveConfig.count) || 1));
+    const costConfig = { ...effectiveConfig, model, count: "1" };
+    const credits = useGenerationCredits(costConfig, undefined, Math.floor(generationCount));
 
     useEffect(() => {
         if (!running || !startedAt) return;
@@ -484,8 +487,9 @@ export default function ImagePage() {
                         </div>
 
                         <div className="mt-auto pt-6">
+                            <GenerationCost config={costConfig} requests={Math.floor(generationCount)} />
                             <Button type="primary" size="large" block icon={<Sparkles className="size-4" />} loading={running} disabled={!canGenerate || running} onClick={() => void generate()}>
-                                {t("workbench.generate")}
+                                {credits === null ? t("workbench.generate") : t("platform.generateWithCost", { count: credits })}
                             </Button>
                         </div>
                     </div>

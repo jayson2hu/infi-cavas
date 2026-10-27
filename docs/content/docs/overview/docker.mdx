@@ -5,15 +5,15 @@ description: Deploy Infinite Canvas with Docker Compose
 
 # Docker Deployment
 
-## Use the published image
+## Build this checkout in frontend-only mode
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas
-docker compose up -d
+docker compose -f docker-compose.web-only.yml up -d --build
 ```
 
 Open `http://localhost:3000`.
+
+The main Compose file now enables the workspace platform. For accounts, billing, brands, and templates, configure `.env` and follow [Platform Deployment](/docs/overview/platform-deployment). The upstream published image is the original frontend and does not include this branch's platform extension.
 
 ## Build locally
 
@@ -37,7 +37,7 @@ cd docs
 docker compose -f docker-compose.local.yml up -d --build
 ```
 
-The main application container only runs Next.js. Canvases, My Assets, generation history, and API keys are stored in the browser by default, while prompt repositories are fetched directly by the frontend. No persistent data volume is required for this data.
+The frontend-only application container runs nginx serving a Vite build. Canvases, My Assets, generation history, and BYOK keys are stored in the browser by default, while prompt repositories are fetched directly by the frontend. Platform mode additionally persists database and object-storage data. The separate documentation application uses Next.js.
 
 ## Optional analytics
 

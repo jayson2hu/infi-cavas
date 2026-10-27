@@ -24,6 +24,10 @@
 
 无限画布是一款面向图片创作的开源工作台。它把画布编排、AI 图片生成、参考图编辑、对话助手、提示词库和素材沉淀放在同一个界面里，适合用来探索视觉方案并连续迭代图片结果。
 
+本分支基于 [basketikun/infinite-canvas](https://github.com/basketikun/infinite-canvas)，保留 MIT 许可与原作者署名，新增可选的账号/工作区、平台网关与计费、品牌套件和行业模板。纯前端自带 Key 模式继续可用，画布仍主要保存在浏览器本地。
+
+平台使用说明：[部署](docs/content/docs/overview/platform-deployment.zh-CN.mdx) · [计费](docs/content/docs/overview/platform-billing.zh-CN.mdx) · [品牌与模板](docs/content/docs/overview/brand-templates.zh-CN.mdx) · [开发进度](docs/development/progress.md) · [问题与验收](docs/development/acceptance.md)。本机验收与尚未完成的生产部署/真实供应商能力验证分别记录。
+
 > [!CAUTION]
 > 项目目前处于开发阶段，不保证历史数据兼容。各种本地存储格式都可能直接调整，欢迎关注后续更新。
 >
@@ -120,13 +124,11 @@
 
 ## 快速开始
 
-AI API Key、Base URL、画布、素材和生成记录默认保存在浏览器本地。
+纯前端模式的 AI API Key、Base URL、画布、素材和生成记录默认保存在浏览器本地。以下命令在当前二开仓库中执行；完整平台模式请按上方部署文档配置。
 
 ### 本地开发
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas
 cd web
 bun install
 bun run dev
@@ -135,9 +137,7 @@ bun run dev
 ### Docker 运行
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas
-docker compose up -d
+docker compose -f docker-compose.web-only.yml up -d --build
 ```
 
 运行后默认端口3000，可访问 `http://localhost:3000`。

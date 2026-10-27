@@ -1,4 +1,7 @@
 import axios from "axios";
+import { isPlatformGatewayUrl, platformHeaders } from "@/lib/platform";
+import { recordPlatformError, recordPlatformHeaders, refreshPlatformCredits } from "./platform/gateway-observer";
+import { useSessionStore } from "@/stores/use-session-store";
 
 import i18n from "@/i18n";
 import { buildApiUrl, resolveModelRequestConfig, resolveModelScript, withLocalProxy, type AiConfig, type ModelChannel } from "@/stores/use-config-store";
@@ -317,6 +320,7 @@ function aiApiUrl(config: AiConfig, path: string) {
 function aiHeaders(config: AiConfig, contentType?: string) {
     return {
         Authorization: `Bearer ${config.apiKey}`,
+        ...platformHeaders(config),
         ...(contentType ? { "Content-Type": contentType } : {}),
     };
 }
@@ -470,12 +474,20 @@ function consumeResponseStreamText(state: ResponseStreamState, text: string, onD
 }
 
 async function requestStreamingResponse(config: AiConfig, body: Record<string, unknown>, onDelta?: (text: string) => void, options?: RequestOptions): Promise<ToolResponseResult> {
+    const workspaceId = platformHeaders(config)["X-IC-Workspace"] || null;
+    const generation = useSessionStore.getState().generation;
+    try {
     const response = await fetch(aiApiUrl(config, "/responses"), {
         method: "POST",
         headers: { ...aiHeaders(config, "application/json"), Accept: "text/event-stream" },
         body: JSON.stringify({ ...body, stream: true }),
         signal: options?.signal,
+        ...(isPlatformGatewayUrl(config.baseUrl) ? { credentials: "include" as const } : {}),
     });
+    if (workspaceId) {
+        recordPlatformHeaders(response.headers, workspaceId, generation);
+        if (response.status === 402) await recordPlatformError(402, await response.clone().json().catch(() => null), workspaceId, generation);
+    }
     if (!response.ok) throw new Error(await readFetchError(response, apiText("requestFailed")));
     if (!response.body) {
         const payload = (await response.json()) as ResponseApiPayload;
@@ -498,6 +510,9 @@ async function requestStreamingResponse(config: AiConfig, body: Record<string, u
     validateResponsePayload(state.payload);
     const result = parseToolResponse(state.payload);
     return { ...result, content: state.text || result.content };
+    } finally {
+        if (workspaceId) void refreshPlatformCredits(workspaceId, generation);
+    }
 }
 
 function toGeminiBody(config: AiConfig, messages: ResponseInputMessage[], extra?: Record<string, unknown>) {
@@ -840,13 +855,16 @@ export async function requestImageQuestion(config: AiConfig, messages: AiTextMes
     }
     try {
         if (requestConfig.apiFormat === "gemini") {
-            const answer = (await requestGeminiStreamingResponse(requestConfig, toGeminiBody(requestConfig, messages), onDelta, options)).content || apiText("noContent");
+            const generationConfig = { ...(requestConfig.temperature !== undefined ? { temperature: requestConfig.temperature } : {}), ...(requestConfig.maxOutputTokens !== undefined ? { maxOutputTokens: requestConfig.maxOutputTokens } : {}) };
+            const answer = (await requestGeminiStreamingResponse(requestConfig, toGeminiBody(requestConfig, messages, Object.keys(generationConfig).length ? { generationConfig } : undefined), onDelta, options)).content || apiText("noContent");
             if (answer === apiText("noContent")) onDelta(answer);
             return answer;
         }
         const answer = (await requestStreamingResponse(requestConfig, {
             model: requestConfig.model,
             input: toResponseInput(withSystemMessage(requestConfig, messages)),
+            ...(requestConfig.temperature !== undefined ? { temperature: requestConfig.temperature } : {}),
+            ...(requestConfig.maxOutputTokens !== undefined ? { max_output_tokens: requestConfig.maxOutputTokens } : {}),
             ...(requestConfig.reasoningEffort === "auto" ? {} : { reasoning: { effort: requestConfig.reasoningEffort } }),
         }, onDelta, options)).content || apiText("noContent");
         if (answer === apiText("noContent")) onDelta(answer);

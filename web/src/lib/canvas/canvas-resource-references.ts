@@ -3,6 +3,7 @@ import i18n from "@/i18n";
 import { getNodeDefinition } from "@/lib/canvas/node-registry";
 import { getDataUrlByteSize, readImageMeta } from "@/lib/image-utils";
 import { imageToDataUrl } from "@/services/image-storage";
+import { collectGroupDescendantIds } from "./canvas-group-members";
 import { CanvasNodeType, type CanvasConnection, type CanvasNodeData } from "@/types/canvas";
 
 export type CanvasResourceKind = "image" | "video" | "audio" | "text";
@@ -94,7 +95,8 @@ function expandGroupResourceNodes(inputNodes: CanvasNodeData[], nodes: CanvasNod
 }
 
 export function getGroupResourceNodes(groupId: string, nodes: CanvasNodeData[]) {
-    return nodes.filter((node) => node.metadata?.groupId === groupId && isResourceNode(node));
+    const ids = collectGroupDescendantIds(new Set([groupId]), nodes);
+    return nodes.filter((node) => node.id !== groupId && ids.has(node.id) && isResourceNode(node));
 }
 
 function labelResourceNodes(nodes: CanvasNodeData[], active: boolean) {

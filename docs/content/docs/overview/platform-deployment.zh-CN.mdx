@@ -1,0 +1,99 @@
+---
+title: 平台模式部署
+description: 部署 Web、Bun 后端、PostgreSQL 与 MinIO，并配置真实供应商
+---
+
+# 平台模式部署
+
+平台模式包含账号、工作区、计费、品牌与行业模板。主 `docker-compose.yml` 从当前源码构建 Web 和 Bun 服务，使用 PostgreSQL 16、MinIO 及一次性存储初始化服务。纯前端请使用 `docker-compose.web-only.yml` 或原 `docker-compose.local.yml`，不需要平台数据库。
+
+本机已执行真实 PostgreSQL、S3 协议存储与浏览器集成验收；当前验收环境没有可用 Docker/WSL，HTTP 服务监听也被运行环境阻止，因此“干净机器 Compose 启动”尚未实机验证。本节是可执行的部署说明，不是已经完成该环境验收的声明。详细证据见仓库 `docs/development/`。
+
+## 准备配置
+
+需要 Docker Engine 与 Compose v2。在当前二开仓库根目录复制 `.env.example` 为 `.env`：
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell 可使用 `Copy-Item .env.example .env`。填写以下必需项；不要使用演示密码或复用同一个密钥。Compose 对空必填值会直接报错。
+
+| 变量 | 填写方式 |
+| --- | --- |
+| `POSTGRES_PASSWORD` | 为数据库生成独立强随机密码 |
+| `DATABASE_URL` | `postgres://ic:编码后的密码@postgres:5432/ic`；用户/库名须与对应 POSTGRES 配置一致 |
+| `APP_SECRET` | 至少 32 字符的独立强随机密钥，保存备份；用于供应商 Key 加密 |
+| `S3_ACCESS_KEY` | 独立的对象存储访问标识，可生成 20 位随机十六进制字符 |
+| `S3_SECRET_KEY` | 独立强随机存储密码 |
+| `ADMIN_EMAILS` | 首个运营管理员注册邮箱；多个邮箱以逗号分隔 |
+
+可以用 Bun 的 `crypto.randomBytes(32).toString('hex')` 在本机生成密码和 `APP_SECRET`，访问标识用 10 个随机字节。数据库 URL 中的密码需要 URL 编码，尤其是 `@ : / ? # %` 等字符；`POSTGRES_PASSWORD` 仍填写未编码原值。随机十六进制密码无需额外编码。不要把真实配置提交到 Git。
+
+默认本机地址为：
+
+```dotenv
+APP_ORIGIN=http://localhost:3000
+WEB_BIND_ADDRESS=127.0.0.1
+WEB_PORT=3000
+S3_PUBLIC_ENDPOINT=http://localhost:9000
+S3_PORT=9000
+S3_BUCKET=infinite-canvas
+```
+
+`APP_ORIGIN` 必须与用户实际打开的源一致；`localhost` 和 `127.0.0.1` 不是同一源。更改端口时同步更改对应公开地址。每个环境使用独立数据库和存储桶，同一数据库的服务实例使用一致且包含数据库名的 `DATABASE_URL`。
+
+## 启动与首次配置
+
+```bash
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+```
+
+只使用 `config --quiet` 检查配置，避免把展开后的密钥打印到共享日志。服务依赖顺序为：PostgreSQL/MinIO 健康 → bucket-init 完成 → 后端互斥迁移、幂等 seed、存储/CORS 准备 → 后端健康 → Web。后端初始化失败时不会开始监听；重复启动不覆盖已有模型、价格、模板或使用次数。
+
+打开 `http://localhost:3000`，使用 `ADMIN_EMAILS` 中的邮箱注册。注册会创建个人工作区和配置的赠送点数。平台没有预置供应商密钥，也没有默认登录密码。
+
+进入“平台管理”：添加真实供应商的 OpenAI 兼容地址与 Key，测试连通，建立模型路由并检查价格。能列出模型不代表该模型实际可调用，必须分别验证需要的图片、文本、视频、语音端点。配置成功后，从首页进入“电商主图套图”，上传商品图、填写变量并运行，核对画布结果、余额和账本。
+
+初始 seed 提供四种模型定义和六个完整行业模板，不会替你开通供应商能力。没有相应模型路由时，不应把缺能力的模板当作已可用工作流宣传。
+
+## 线上地址与反向代理
+
+默认 Web 和 MinIO 的公开端口只绑定本机，PostgreSQL 与 Bun 不发布宿主机端口，MinIO 控制台也不公开。线上可由你管理的 TLS 入口转发本机 3000，并使用独立 HTTPS 对象存储域名转发本机 9000。设置真实的 HTTPS `APP_ORIGIN` 与 `S3_PUBLIC_ENDPOINT` 后重建服务配置。
+
+浏览器直接使用预签名 PUT/GET。`S3_PUBLIC_ENDPOINT` 必须是浏览器可达且与签名 Host 相符的地址，不能填容器内部的 `http://minio:9000`；对象存储反代需要保留实际 Host、路径和签名查询参数。站点为 HTTPS 时，对象存储也应使用 HTTPS。CORS 由初始化过程允许当前 APP_ORIGIN 的 GET/PUT/HEAD 及必要签名头。
+
+Web nginx 的 `/api/` 转发到内部 `server:8787`，关闭响应和请求缓冲，读写超时 900 秒、请求体上限 100MB。后端 `TRUST_PROXY=true` 仅用于这一受控网络，nginx 覆盖客户端提交的 IP 头。不要把后端直接暴露公网。
+
+多层反代时，内层默认看到的是上一层代理 IP。若需真实客户端限流，应在你管理的 nginx 配置里，仅对明确可信的上一层代理地址配置 real-IP 解析；不要全网信任外部 `X-Forwarded-For`。也可在应用入口 nginx 配置 TLS，减少代理层。
+
+## 运行参数
+
+| 变量 | 默认行为 |
+| --- | --- |
+| `PLATFORM_API_BASE` | 平台 Web 固定 `/api`；为空时使用纯前端路由 |
+| `BRAND_NAME` | 可选产品显示名称，保留原项目署名 |
+| `BILLING_ENABLED` | 默认 true；false 时只记用量、不扣平台点数 |
+| `SIGNUP_BONUS_CREDITS` | 默认赠送 200 点 |
+| `ALLOW_SIGNUP` | 默认 true，可关闭公开注册 |
+| `MODERATION_BLOCKLIST` | 可选平台禁用内容词，逗号分隔，与品牌提示规则独立 |
+| `ANALYTICS_GA4_ID` / `ANALYTICS_BAIDU_ID` | 默认为空，默认不加载统计脚本 |
+
+更改运行期变量后使用 `docker compose up -d --force-recreate` 应用新配置。供应商、模型、价格和模板优先通过管理界面维护，重复 seed 不会重置运营编辑。
+
+## 备份、排障与验收
+
+持久卷包含 PostgreSQL 和 MinIO 数据。备份数据库、对象存储和 `APP_SECRET`，并在隔离环境验证恢复；浏览器本地画布另行导出或使用 WebDAV。不要将删除持久卷作为常规升级步骤，也不要仅更换 `APP_SECRET` 期待旧供应商 Key 自动重新加密。
+
+```bash
+docker compose logs --tail=100 server bucket-init
+docker compose logs --tail=100 web minio postgres
+```
+
+初始化失败先检查数据库地址、服务健康和存储凭据；403 检查 APP_ORIGIN、成员权限和签名地址；上传失败检查公开 S3 地址、CORS、代理 Host 和图片实际格式；生成失败检查模型路由及供应商端点。日志或工单发送前先移除密钥与完整签名 URL。
+
+干净机器验收应覆盖：注册→首页→模板→真实出图、实时余额与账本、故障退款、402 不访问上游、成员额度、强制品牌、视频刷新恢复、BYOK、纯前端模式、免计费模式和 390px 页面。受控上游、本机 S3 协议替身、真实供应商和真实 Docker/MinIO 必须分别记录。
+
+另见[计费说明](/zh-CN/docs/overview/platform-billing)、[品牌与模板](/zh-CN/docs/overview/brand-templates)及[平台安全与数据边界](/zh-CN/docs/support/platform-security)。

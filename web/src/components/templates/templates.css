@@ -1,0 +1,18 @@
+.template-library-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+.template-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+.template-card { min-width: 0; overflow: hidden; text-align: left; border: 2px solid transparent; border-radius: 12px; background: var(--workspace-card); color: var(--workspace-text); box-shadow: 0 0 0 1px var(--workspace-border); transition: border-color 160ms ease; }
+.template-card:hover { border-color: var(--workspace-border-strong); }
+.template-card.is-selected { border-color: var(--workspace-text); box-shadow: none; }
+.template-card-cover { height: 164px; background: var(--workspace-subtle); border-bottom: 1px solid var(--workspace-border); }
+.template-card-cover > img { width: 100%; height: 100%; object-fit: cover; }
+.template-card-flow { height: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 12px; }
+.template-card-flow > span { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.template-card-flow > span > span { min-width: 0; padding: 12px 8px; border: 1px solid var(--workspace-border); border-radius: 8px; background: var(--workspace-card); font-size: 11px; overflow-wrap: anywhere; }
+.template-card-flow svg { flex-shrink: 0; opacity: .4; }
+.template-detail { padding: 22px; background: var(--workspace-card); border: 1px solid var(--workspace-border); border-radius: 12px; }
+.template-library.is-compact { height: 100%; overflow-y: auto; padding: 6px 12px 24px; }
+.template-library.is-compact .template-library-layout, .template-library.is-compact .template-card-grid { grid-template-columns: minmax(0, 1fr); }
+.template-library.is-compact .template-detail { border: 0; background: transparent; padding: 0; }
+.template-library.is-compact .template-card-cover { height: 110px; }
+@media (max-width: 1150px) { .template-library-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 500px) { .template-card-grid { grid-template-columns: minmax(0, 1fr); } .template-detail { padding: 16px; } }

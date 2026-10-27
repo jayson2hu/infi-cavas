@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<title>用量与计费</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#f4f2ed}
+a{color:#2a49c9;text-decoration:none}a:hover{color:#1d3699}
+.nav{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:8px;color:#57534e;font-size:14px}
+.nav:hover{background:rgba(28,25,23,.05);color:#1c1917}
+.card{background:#fbfaf7;border:1px solid #e3dfd6;border-radius:12px}
+.h2{margin:0;font-size:15px;font-weight:700}
+.sub{font-size:12px;color:#6b655d}
+.num{font-variant-numeric:tabular-nums}
+.tr{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;padding:10px 0;border-top:1px solid #eeebe4;font-size:13px}
+</style></head>
+<body>
+
+
+<div style="min-height: 1000px; display: flex; flex-wrap: wrap; background: #f4f2ed; font-family: Inter, 'Noto Sans SC', system-ui, sans-serif; color: #1c1917">
+
+<nav aria-label="主导航" style="flex: 1 1 232px; box-sizing: border-box; padding: 20px 14px; border-right: 1px solid #e3dfd6; display: flex; flex-direction: column; gap: 4px; background: #f0eee8">
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px">
+<div style="width: 30px; height: 30px; border-radius: 8px; background: #1c1917; display: grid; place-items: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f4f2ed" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 12c0-2.8 2.2-5 5-5M17 12c0 2.8-2.2 5-5 5"></path><circle cx="12" cy="12" r="2"></circle></svg></div>
+<div style="display: flex; flex-direction: column"><span style="font-weight: 700; font-size: 15px">[品牌名] 画布</span><span style="font-size: 11px; color: #6b655d">基于 infinite-canvas</span></div>
+</div>
+<a class="nav" href="Main.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"></path></svg>首页</a>
+<a class="nav" href="Canvas.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>我的画布</a>
+<a class="nav" href="Templates.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1.5"></rect><rect x="15" y="14" width="6" height="6" rx="1.5"></rect><path d="M9 7h4a2 2 0 0 1 2 2v5"></path></svg>模板中心</a>
+<a class="nav" href="Brand.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 9l9 12 9-12z"></path><path d="M3 9h18"></path></svg>品牌资产</a>
+<a class="nav" href="Brand.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="m21 16-5-5-9 9"></path></svg>素材库</a>
+<a class="nav" href="Templates.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h9M5 20h6"></path></svg>提示词库</a>
+<div style="height: 1px; background: #e3dfd6; margin: 10px 4px"></div>
+<a class="nav" href="Billing.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>团队成员</a>
+<a class="nav" href="Billing.dc.html" style="background: #e7e5df; color: #1c1917; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h4"></path></svg>用量与计费</a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 20px">
+
+<header style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px">
+<div>
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">用量与计费</h1>
+<p style="margin: 6px 0 0; font-size: 14px; color: #6b655d">团队版 · 每月 10,000 点 · 11 月 1 日重置 · 失败任务自动退点</p>
+</div>
+<div style="display: flex; gap: 8px">
+<button type="button" style="height: 38px; padding: 0 14px; border: 1px solid #d6d3ca; border-radius: 10px; background: #fbfaf7; font: inherit; font-size: 13px; color: #1c1917; cursor: pointer">导出账单</button>
+<button type="button" style="height: 38px; padding: 0 14px; border: 0; border-radius: 10px; background: #1c1917; font: inherit; font-size: 13px; font-weight: 600; color: #fafaf9; cursor: pointer">充值点数</button>
+</div>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px">
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span class="sub">剩余点数</span>
+<span class="num" style="font-size: 28px; font-weight: 700">6,420</span>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df"><div style="width: 64%; height: 100%; border-radius: 3px; background: #1c1917"></div></div>
+<span class="sub">按当前速度约可用至 11 月 3 日</span>
+</div>
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span class="sub">本月消耗</span>
+<span class="num" style="font-size: 28px; font-weight: 700">3,580</span>
+<span class="sub">较上月同期 +18%</span>
+</div>
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span class="sub">生成次数</span>
+<span class="num" style="font-size: 28px; font-weight: 700">412</span>
+<span class="sub">图片 371 · 视频 29 · 文本 12</span>
+</div>
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span class="sub">失败已退还</span>
+<span class="num" style="font-size: 28px; font-weight: 700">96</span>
+<span class="sub">23 次失败，成功率 94.4%</span>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+<div style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+<section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+<h2 class="h2">每日消耗（点）</h2>
+<div style="display: flex; gap: 14px; font-size: 12px; color: #57534e">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #1c1917"></span>图片</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #c08a3e"></span>视频</span>
+</div>
+</div>
+<div role="img" aria-label="10 月 1 日至 24 日每日点数消耗柱状图，峰值在 10 月 17 日约 320 点" style="height: 180px; display: flex; align-items: flex-end; gap: 6px; padding-top: 8px; border-bottom: 1px solid #e3dfd6">
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 28.125%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 37.5%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 25%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 43.75%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 50%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 18.75%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 12.5%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 40.625%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 37.5%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 46.875%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 53.125%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 34.375%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 56.25%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 62.5%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 28.125%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 43.75%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 50%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 31.25%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 68.75%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 40.625%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 37.5%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 21.875%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 46.875%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 53.125%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 0%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 59.375%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%">
+<div style="height: 18.75%; background: #c08a3e; border-radius: 3px 3px 0 0"></div>
+<div style="height: 50%; background: #1c1917; border-radius: 2px"></div>
+</div>
+
+</div>
+<div style="display: flex; justify-content: space-between" class="sub"><span>10/1</span><span>10/8</span><span>10/15</span><span>10/24</span></div>
+</section>
+
+<section class="card" style="padding: 18px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px"><h2 class="h2">成员用量</h2><span class="sub">管理员可为成员设置月度上限</span></div>
+<div class="tr sub" style="border-top: 0"><span>成员</span><span>本月消耗</span><span>上限</span><span>占比</span></div>
+
+<div class="tr">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; border-radius: 50%; background: #d9cfc0; display: grid; place-items: center; font-size: 11px; font-weight: 600">林</span>林舟<span class="sub">管理员</span></span>
+<span class="num">1,420</span>
+<span class="num sub">不限</span>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df"><div style="width: 40%; height: 100%; border-radius: 3px; background: #1c1917"></div></div>
+</div>
+
+<div class="tr">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; border-radius: 50%; background: #c9d2d4; display: grid; place-items: center; font-size: 11px; font-weight: 600">周</span>周晴<span class="sub">设计师</span></span>
+<span class="num">1,080</span>
+<span class="num sub">1,500</span>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df"><div style="width: 72%; height: 100%; border-radius: 3px; background: #1c1917"></div></div>
+</div>
+
+<div class="tr">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; border-radius: 50%; background: #d8cdd2; display: grid; place-items: center; font-size: 11px; font-weight: 600">陈</span>陈一<span class="sub">运营</span></span>
+<span class="num">760</span>
+<span class="num sub">800</span>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df"><div style="width: 95%; height: 100%; border-radius: 3px; background: #b45309"></div></div>
+</div>
+
+<div class="tr">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; border-radius: 50%; background: #d4d6c5; display: grid; place-items: center; font-size: 11px; font-weight: 600">许</span>许安<span class="sub">剪辑</span></span>
+<span class="num">320</span>
+<span class="num sub">1,000</span>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df"><div style="width: 32%; height: 100%; border-radius: 3px; background: #1c1917"></div></div>
+</div>
+
+</section>
+</div>
+
+<aside style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 20px">
+<section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<h2 class="h2">充值点数包</h2>
+
+<label style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; border: 1px solid #e3dfd6; background: #fff; cursor: pointer">
+<input type="radio" name="pack" style="accent-color: rgb(28, 25, 23);">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 15px; font-weight: 600">2,000 点</span><span class="sub">适合个人补量</span></span>
+<span style="font-size: 14px; font-weight: 600">[¥ 价格]</span>
+</label>
+
+<label style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; border: 2px solid #1c1917; background: #fff; cursor: pointer">
+<input type="radio" name="pack" checked="true" style="accent-color: rgb(28, 25, 23);">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 15px; font-weight: 600">10,000 点</span><span class="sub">团队常用 · 赠 5%</span></span>
+<span style="font-size: 14px; font-weight: 600">[¥ 价格]</span>
+</label>
+
+<label style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; border: 1px solid #e3dfd6; background: #fff; cursor: pointer">
+<input type="radio" name="pack" style="accent-color: rgb(28, 25, 23);">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 15px; font-weight: 600">50,000 点</span><span class="sub">企业 · 赠 12% · 可开发票</span></span>
+<span style="font-size: 14px; font-weight: 600">[¥ 价格]</span>
+</label>
+
+<button type="button" style="height: 40px; border: 0; border-radius: 10px; background: #1c1917; color: #fafaf9; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">去支付</button>
+<span class="sub" style="text-align: center">充值点数不过期，优先扣除套餐内点数</span>
+</section>
+
+<section class="card" style="padding: 18px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px"><h2 class="h2">模型计价</h2><span class="sub">管理员可调</span></div>
+
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #eeebe4; font-size: 13px"><span>gpt-image-2 · 1024</span><span class="num sub">4 点 / 张</span></div>
+
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #eeebe4; font-size: 13px"><span>gpt-image-2 · 2K 高清</span><span class="num sub">8 点 / 张</span></div>
+
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #eeebe4; font-size: 13px"><span>sora-2 · 5 秒</span><span class="num sub">60 点 / 条</span></div>
+
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #eeebe4; font-size: 13px"><span>文本模型</span><span class="num sub">1 点 / 千字</span></div>
+
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #eeebe4; font-size: 13px"><span>语音合成</span><span class="num sub">2 点 / 分钟</span></div>
+
+</section>
+
+<section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 class="h2">自带 API Key 模式</h2>
+<span role="switch" aria-checked="false" aria-label="自带 API Key 模式" style="width: 34px; height: 20px; border-radius: 10px; background: #d6d3ca; position: relative; display: block"><span style="position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff"></span></span>
+</div>
+<span class="sub" style="line-height: 1.6">私有化部署可开启：沿用原项目的渠道配置，直连自有接口，不扣平台点数，仅统计用量。</span>
+</section>
+</aside>
+</div>
+</main>
+</div>
+
+
+
+
+</body></html>

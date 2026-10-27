@@ -1,4 +1,7 @@
 import axios from "axios";
+import { isPlatformGatewayUrl, platformHeaders } from "@/lib/platform";
+import { useSessionStore } from "@/stores/use-session-store";
+import "./platform/gateway-observer";
 import { nanoid } from "nanoid";
 
 import i18n from "@/i18n";
@@ -19,7 +22,7 @@ type VideoMediaOptions = RequestOptions & { videos?: ReferenceVideo[]; audios?: 
 const apiText = (key: string, options?: Record<string, unknown>) => i18n.t(`apiErrors.${key}`, options);
 
 export type VideoGenerationResult = { blob?: Blob; url?: string; mimeType?: string };
-export type VideoGenerationTask = { id: string; provider: "openai" | "gemini" | "plugin"; model: string };
+export type VideoGenerationTask = { id: string; provider: "openai" | "gemini" | "plugin"; model: string; workspaceId?: string; userId?: string };
 type GeminiInlineData = { bytesBase64Encoded: string; mimeType: string };
 type GeminiVideoOperation = {
     name?: string;
@@ -39,6 +42,7 @@ function aiApiUrl(config: AiConfig, path: string) {
 function aiHeaders(config: AiConfig, contentType?: string) {
     return {
         Authorization: `Bearer ${config.apiKey}`,
+        ...platformHeaders(config),
         ...(contentType ? { "Content-Type": contentType } : {}),
     };
 }
@@ -72,19 +76,22 @@ function videoTaskFailed(message: string) {
 export async function createVideoGenerationTask(config: AiConfig, prompt: string, references: ReferenceImage[] = [], options?: VideoMediaOptions): Promise<VideoGenerationTask> {
     const selectedModel = (config.model || config.videoModel).trim();
     const requestConfig = resolveModelRequestConfig(config, selectedModel);
+    if (requestConfig.brandInstructions) prompt = `${requestConfig.brandInstructions}\n—— 用户提示词 ——\n${prompt}`;
     const script = resolveModelScript(config, selectedModel);
     if (script) return createPluginVideoTask(requestConfig, selectedModel, script, prompt, references, options);
     assertVideoConfig(requestConfig, requestConfig.model);
     if (requestConfig.apiFormat === "gemini") return createGeminiVideoTask(requestConfig, selectedModel, prompt, references, options);
-    return createOpenAIVideoTask(requestConfig, selectedModel, prompt, references, options);
+    const context = isPlatformGatewayUrl(requestConfig.baseUrl) ? { workspaceId: requestConfig.platformContext?.workspaceId, userId: useSessionStore.getState().user?.id } : {};
+    return { ...await createOpenAIVideoTask(requestConfig, selectedModel, prompt, references, options), ...context };
 }
 
 export async function pollVideoGenerationTask(config: AiConfig, task: VideoGenerationTask, options?: RequestOptions): Promise<VideoGenerationTaskState> {
+    if (task.userId && task.userId !== useSessionStore.getState().user?.id) throw new Error(i18n.t("platform.sessionChanged"));
     if (task.provider === "plugin") {
         const result = pluginVideoResults.get(task.id);
         return result ? { status: "completed", result } : { status: "failed", error: apiText("pluginVideoExpired") };
     }
-    const requestConfig = resolveModelRequestConfig(config, task.model);
+    const requestConfig = resolveModelRequestConfig(task.workspaceId ? { ...config, platformContext: { ...config.platformContext, workspaceId: task.workspaceId } } : config, task.model);
     assertVideoConfig(requestConfig, requestConfig.model);
     if (task.provider === "gemini") return pollGeminiVideoTask(requestConfig, task, options);
     return pollOpenAIVideoTask(requestConfig, task, options);

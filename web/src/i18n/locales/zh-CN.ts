@@ -1,4 +1,7 @@
+import platform from "./platform-zh-CN";
+
 export default {
+    platform,
     meta: {
         title: "无限画布",
         description: "一个无限画布创作工具",

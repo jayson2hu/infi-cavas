@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Image as ImageIcon, LoaderCircle, MessageSquare, Music2, Play, Settings2, Square, Video } from "lucide-react";
 import { Button, Segmented } from "antd";
 import { useTranslation } from "react-i18next";
+import { GenerationCost, useGenerationCredits } from "@/components/billing/generation-cost";
 
 import { ModelPicker } from "@/components/model-picker";
 import { defaultConfig, resolveModelForCapability, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
@@ -12,6 +13,8 @@ import { CanvasAudioSettingsPopover, type CanvasAudioSettingKey } from "./canvas
 import { CanvasVideoSettingsPopover } from "./canvas-video-settings-popover";
 import { CanvasTextSettingsPopover } from "./canvas-text-settings-popover";
 import type { CanvasGenerationMode, CanvasNodeData, CanvasNodeMetadata } from "@/types/canvas";
+import { getGenerationCount } from "@/lib/canvas/canvas-generation-helpers";
+import { BrandToggle } from "@/components/brand/brand-toggle";
 
 type CanvasConfigNodePanelProps = {
     node: CanvasNodeData;
@@ -30,6 +33,8 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const mode = node.metadata?.generationMode || "image";
     const config = buildNodeConfig(globalConfig, node, mode);
+    const requests = mode === "text" ? getGenerationCount(String(node.metadata?.textCount || 1)) : 1;
+    const credits = useGenerationCredits(config, undefined, requests);
     const chipStyle = { background: theme.node.fill, borderColor: theme.node.stroke, color: theme.node.text };
     const hasAnyInput = Boolean(inputSummary.textCount || inputSummary.imageCount || inputSummary.videoCount || inputSummary.audioCount);
     const hasComposerContent = Boolean((node.metadata?.composerContent ?? node.metadata?.prompt ?? "").trim());
@@ -111,6 +116,8 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                 )}
             </div>
 
+            <BrandToggle config={config} enabled={node.metadata?.brandKit !== false} onChange={(brandKit) => onConfigChange(node.id, { brandKit })} />
+            <GenerationCost config={config} requests={requests} />
             <Button
                 type="primary"
                 className="mt-auto !h-9 !w-full !cursor-pointer !rounded-lg"
@@ -129,7 +136,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                     ) : (
                         <>
                             <Play className="size-4" />
-                            <span>{t("canvas.configNode.generate")}</span>
+                            <span>{credits === null ? t("canvas.configNode.generate") : t("platform.generateWithCost", { count: credits })}</span>
                         </>
                     )}
                 </span>

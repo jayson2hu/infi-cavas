@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { AssetPickerModal, type InsertAssetPayload } from "@/components/canvas/asset-picker-modal";
 import { ModelPicker } from "@/components/model-picker";
+import { GenerationCost, useGenerationCredits } from "@/components/billing/generation-cost";
 import { PromptSelectDialog } from "@/components/prompts/prompt-select-dialog";
 import { VideoSettingsPanel, normalizeVideoResolutionValue, normalizeVideoSizeValue, videoModeLabel, videoSizeLabel } from "@/components/video-settings-panel";
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -20,6 +21,7 @@ import { useAssetStore } from "@/stores/use-asset-store";
 import { useWorkbenchAgentStore } from "@/stores/use-workbench-agent-store";
 import { boolConfig, modelOptionLabel, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
 import { useThemeStore } from "@/stores/use-theme-store";
+import { useSessionStore } from "@/stores/use-session-store";
 import type { ReferenceImage } from "@/types/image";
 import i18n from "@/i18n";
 
@@ -75,7 +77,7 @@ export default function VideoPage() {
     const dragDepthRef = useRef(0);
     const activeLogIdsRef = useRef<Set<string>>(new Set());
     const config = useConfigStore((state) => state.config);
-    const effectiveConfig = useEffectiveConfig();
+    const effectiveConfig = useEffectiveConfig({ source: "video-workbench" });
     const updateConfig = useConfigStore((state) => state.updateConfig);
     const isAiConfigReady = useConfigStore((state) => state.isAiConfigReady);
     const openConfigDialog = useConfigStore((state) => state.openConfigDialog);
@@ -103,6 +105,8 @@ export default function VideoPage() {
     const agentTaskIdRef = useRef<string | undefined>(undefined);
 
     const model = effectiveConfig.videoModel || effectiveConfig.model;
+    const costConfig = { ...effectiveConfig, model };
+    const credits = useGenerationCredits(costConfig);
     const canGenerate = Boolean(prompt.trim());
 
     useEffect(() => {
@@ -303,12 +307,14 @@ export default function VideoPage() {
 
     const resumePendingLogs = (items: GenerationLog[]) => {
         for (const log of items) {
-            if (log.status === "pending" && log.task) void pollGenerationLog(log);
+            if (log.status === "pending" && log.task && (!log.task.workspaceId || log.task.workspaceId === useSessionStore.getState().currentWorkspaceId) && (!log.task.userId || log.task.userId === useSessionStore.getState().user?.id)) void pollGenerationLog(log);
         }
     };
 
     const pollGenerationLog = async (log: GenerationLog, configOverride?: AiConfig, agentTaskId?: string) => {
         if (!log.task || activeLogIdsRef.current.has(log.id)) return;
+        if (log.task.workspaceId && log.task.workspaceId !== useSessionStore.getState().currentWorkspaceId) { message.warning(t("platform.taskWorkspaceChanged")); return; }
+        if (log.task.userId && log.task.userId !== useSessionStore.getState().user?.id) { message.warning(t("platform.sessionChanged")); return; }
         activeLogIdsRef.current.add(log.id);
         setRunning(true);
         setStartedAt((value) => value || performance.now());
@@ -457,8 +463,9 @@ export default function VideoPage() {
                         </div>
 
                         <div className="mt-auto pt-6">
+                            <GenerationCost config={costConfig} />
                             <Button type="primary" size="large" block icon={<Sparkles className="size-4" />} loading={running} disabled={!canGenerate || running} onClick={() => void generate()}>
-                                {t("workbench.generate")}
+                                {credits === null ? t("workbench.generate") : t("platform.generateWithCost", { count: credits })}
                             </Button>
                         </div>
                     </div>

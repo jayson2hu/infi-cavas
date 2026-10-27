@@ -4,6 +4,13 @@ import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 
 import i18n from "@/i18n";
+import { PLATFORM_API_BASE } from "@/constant/runtime-config";
+import { isPlatformEnabled, isPlatformGatewayUrl, PLATFORM_CHANNEL_ID } from "@/lib/platform";
+import type { PlatformModel, PriceRule } from "@/services/api/platform/types";
+import { useSessionStore } from "@/stores/use-session-store";
+import { useBrandStore } from "@/stores/use-brand-store";
+import { applyBrandConfigDefaults, applyByokBrand, brandDefaultsToConfig } from "@/lib/platform-brand";
+import type { BrandRules } from "@/services/api/platform/brands";
 
 export type ApiCallFormat = "openai" | "gemini";
 export type ModelCapability = "image" | "video" | "text" | "audio";
@@ -13,6 +20,7 @@ export type ChannelModel = {
     name: string;
     capability: ModelCapability;
     script?: string;
+    priceHint?: PriceRule;
 };
 
 export type ModelChannel = {
@@ -22,9 +30,14 @@ export type ModelChannel = {
     apiKey: string;
     apiFormat: ApiCallFormat;
     models: ChannelModel[];
+    readonly?: boolean;
 };
 
 export type AiConfig = {
+    platformContext?: { workspaceId?: string; sessionGeneration?: number; projectId?: string; nodeId?: string; brandId?: string | "none"; brand?: BrandRules; defaultBrand?: BrandRules; brandReady?: boolean; brandKit?: boolean; source?: "canvas" | "image-workbench" | "video-workbench" | "plugin" | "agent" | "api" };
+    brandInstructions?: string;
+    temperature?: number;
+    maxOutputTokens?: number;
     channelMode: "remote" | "local";
     baseUrl: string;
     apiKey: string;
@@ -85,6 +98,7 @@ export const defaultConfig: AiConfig = {
     apiKey: "",
     apiFormat: "openai",
     channels: [
+        ...(isPlatformEnabled() ? [createPlatformChannel()] : []),
         {
             id: "default",
             name: i18n.t("config.channels.defaultName"),
@@ -136,6 +150,7 @@ export const defaultWebdavSyncConfig: WebdavSyncConfig = {
 };
 
 type ConfigStore = {
+    setPlatformModels: (models: PlatformModel[]) => void;
     config: AiConfig;
     webdav: WebdavSyncConfig;
     isConfigOpen: boolean;
@@ -204,6 +219,7 @@ export function selectableModelsByCapability(config: AiConfig, capability?: Mode
 
 /** The user script (if any) attached to a model; empty string means use the system default call. */
 export function resolveModelScript(config: AiConfig, value: string) {
+    if (decodeChannelModel(value)?.channelId === PLATFORM_CHANNEL_ID) return "";
     return findChannelModel(config, value)?.model.script?.trim() || "";
 }
 
@@ -215,18 +231,33 @@ function isAiConfigReady(config: AiConfig, model: string) {
 export const useConfigStore = create<ConfigStore>()(
     persist(
         (set, get) => ({
+            setPlatformModels: (models) => {
+                if (!isPlatformEnabled()) return;
+                set((state) => {
+                    const channels = [createPlatformChannel(models), ...state.config.channels.filter((channel) => channel.id !== PLATFORM_CHANNEL_ID)];
+                    const choose = (value: string, capability: ModelCapability) => {
+                        const first = models.find((model) => model.capability === capability);
+                        const unconfiguredDefault = value.startsWith("default::") && !channels.find((channel) => channel.id === "default")?.apiKey.trim();
+                        return first && (!value || unconfiguredDefault) ? encodeChannelModel(PLATFORM_CHANNEL_ID, first.id) : value;
+                    };
+                    return { config: { ...state.config, channels, models: modelOptionsFromChannels(channels), model: choose(state.config.model, "image"), imageModel: choose(state.config.imageModel, "image"), videoModel: choose(state.config.videoModel, "video"), textModel: choose(state.config.textModel, "text"), audioModel: choose(state.config.audioModel, "audio") } };
+                });
+            },
             config: defaultConfig,
             webdav: defaultWebdavSyncConfig,
             isConfigOpen: false,
             configTab: "channels",
             shouldPromptContinue: false,
-            updateConfig: (key, value) =>
+            updateConfig: (key, value) => {
+                const brand = useBrandStore.getState();
+                if (brand.ready && brand.brand && brand.workspaceId === useSessionStore.getState().currentWorkspaceId && brand.generation === useSessionStore.getState().generation && key in brandDefaultsToConfig(brand.brand.defaultParams, get().config)) { brand.override(key, value); return; }
                 set((state) => ({
                     config: {
                         ...state.config,
-                        [key]: value,
+                        [key]: key === "channels" && isPlatformEnabled() ? [state.config.channels.find((channel) => channel.id === PLATFORM_CHANNEL_ID) || createPlatformChannel(), ...(value as ModelChannel[]).filter((channel) => channel.id !== PLATFORM_CHANNEL_ID)] : value,
                     },
-                })),
+                }));
+            },
             importChannelCredentials: (input) => {
                 const currentConfig = get().config;
                 const result = upsertChannelCredentials(currentConfig, input);
@@ -247,7 +278,7 @@ export const useConfigStore = create<ConfigStore>()(
         }),
         {
             name: CONFIG_STORE_KEY,
-            partialize: (state) => ({ config: state.config, webdav: state.webdav }),
+            partialize: (state) => ({ config: { ...state.config, channels: state.config.channels.filter((channel) => channel.id !== PLATFORM_CHANNEL_ID), platformContext: undefined }, webdav: state.webdav }),
             merge: (persisted, current) => {
                 const persistedState = (persisted || {}) as Partial<ConfigStore>;
                 const persistedConfig = (persistedState.config || {}) as Partial<AiConfig>;
@@ -291,9 +322,17 @@ export const useConfigStore = create<ConfigStore>()(
     ),
 );
 
-export function useEffectiveConfig() {
+export function useEffectiveConfig(platformContext?: AiConfig["platformContext"]) {
     const config = useConfigStore((state) => state.config);
-    return useMemo(() => ({ ...config, channelMode: "local" as const }), [config]);
+    const workspaceId = useSessionStore((state) => state.currentWorkspaceId);
+    const sessionGeneration = useSessionStore((state) => state.generation);
+    const brands = useBrandStore();
+    const active = brands.workspaceId === workspaceId && brands.generation === sessionGeneration;
+    return useMemo(() => ({ ...applyBrandConfigDefaults(config, active ? brands.brand : null, brands.overrides), channelMode: "local" as const, ...(isPlatformEnabled() ? { platformContext: { workspaceId: workspaceId || undefined, sessionGeneration, brand: active ? brands.brand || undefined : undefined, defaultBrand: active ? brands.defaultBrand || undefined : undefined, brandReady: active && brands.ready, ...platformContext } } : {}) }), [config, workspaceId, sessionGeneration, active, brands.brand, brands.defaultBrand, brands.ready, brands.overrides, platformContext?.workspaceId, platformContext?.sessionGeneration, platformContext?.projectId, platformContext?.nodeId, platformContext?.brandId, platformContext?.brandKit, platformContext?.source]);
+}
+
+export function createPlatformChannel(models: PlatformModel[] = []): ModelChannel {
+    return { id: PLATFORM_CHANNEL_ID, name: i18n.t("platform.platformChannel"), baseUrl: `${PLATFORM_API_BASE}/gateway`, apiKey: "platform", apiFormat: "openai", readonly: true, models: models.map((model) => ({ name: model.id, capability: model.capability, priceHint: model.price_hint })) };
 }
 
 /** Normalize a mixed list of raw model names or model objects into deduped ChannelModel entries. */
@@ -332,6 +371,7 @@ export function upsertChannelCredentials(
     if (!isHttpBaseUrl(rawBaseUrl)) return { status: "invalid-base-url", config };
 
     const baseUrl = normalizeImportedBaseUrl(rawBaseUrl);
+    if (isPlatformGatewayUrl(baseUrl)) return { status: "invalid-base-url", config };
     const apiKey = input.apiKey?.trim() || "";
     const matchingIndex = config.channels.findIndex((channel) => normalizedBaseUrlKey(channel.baseUrl) === normalizedBaseUrlKey(baseUrl));
 
@@ -421,6 +461,7 @@ export function normalizeModelOptionValue(value: string | undefined, channels: M
     if (!model) return "";
     const decoded = decodeChannelModel(model);
     if (decoded) {
+        if (isPlatformEnabled() && decoded.channelId === PLATFORM_CHANNEL_ID) return model;
         const channel = channels.find((item) => item.id === decoded.channelId);
         return channel && channel.models.some((item) => item.name === decoded.model) ? model : "";
     }
@@ -436,18 +477,24 @@ export function resolveModelChannel(config: AiConfig, value: string) {
 }
 
 export function resolveModelRequestConfig(config: AiConfig, value: string) {
+    if (config.platformContext?.sessionGeneration !== undefined && config.platformContext.sessionGeneration !== useSessionStore.getState().generation) throw new Error(i18n.t("platform.sessionChanged"));
+    const selected = decodeChannelModel(value);
+    if (selected && !config.channels.some((channel) => channel.id === selected.channelId && channel.models.some((model) => model.name === selected.model))) throw new Error(i18n.t("platform.modelUnavailable"));
     const channel = resolveModelChannel(config, value);
+    const platform = decodeChannelModel(value)?.channelId === PLATFORM_CHANNEL_ID;
+    if (platform && (!isPlatformEnabled() || channel.id !== PLATFORM_CHANNEL_ID || !channel.models.some((model) => model.name === modelOptionName(value)))) throw new Error(i18n.t("platform.modelUnavailable"));
     return {
-        ...config,
+        ...(platform ? config : applyByokBrand(config)),
         model: modelOptionName(value || config.model),
-        baseUrl: channel.baseUrl,
-        apiKey: channel.apiKey,
-        apiFormat: channel.apiFormat,
+        baseUrl: platform ? `${PLATFORM_API_BASE}/gateway` : channel.baseUrl,
+        apiKey: platform ? "platform" : channel.apiKey,
+        apiFormat: platform ? "openai" as const : channel.apiFormat,
+        ...(platform ? { platformContext: { workspaceId: useSessionStore.getState().currentWorkspaceId || undefined, sessionGeneration: useSessionStore.getState().generation, ...config.platformContext } } : {}),
     };
 }
 
 function normalizeChannels(config: AiConfig) {
-    const persistedChannels = Array.isArray(config.channels) ? config.channels : [];
+    const persistedChannels = Array.isArray(config.channels) ? config.channels.filter((channel) => channel.id !== PLATFORM_CHANNEL_ID) : [];
     const channels = persistedChannels.map((channel, index) =>
         createModelChannel({
             ...channel,
@@ -468,7 +515,7 @@ function normalizeChannels(config: AiConfig) {
             }),
         );
     }
-    return channels;
+    return isPlatformEnabled() ? [createPlatformChannel(), ...channels] : channels;
 }
 
 export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {
@@ -499,6 +546,7 @@ export function normalizeLocalProxyUrl(value: string) {
 
 /** Prefix an outgoing request with the local forwarding proxy so the browser is not blocked by CORS. */
 export function withLocalProxy(url: string) {
+    if (isPlatformGatewayUrl(url)) return url;
     const { proxyEnabled, proxyUrl } = useConfigStore.getState().config;
     if (!proxyEnabled || !/^https?:\/\//i.test(url)) return url;
     const base = normalizeLocalProxyUrl(proxyUrl);

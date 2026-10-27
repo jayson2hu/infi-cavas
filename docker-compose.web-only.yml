@@ -1,0 +1,12 @@
+services:
+  app:
+    image: infinite-canvas-web-only:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      PLATFORM_API_BASE: ""
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # 可选 ANALYTICS_GA4_ID / ANALYTICS_BAIDU_ID，默认关闭。

@@ -5,5 +5,13 @@ description: Planned follow-up work
 
 # TODO
 
+## 平台二次开发
+
+The user confirmed delivery of the implementation and locally executable acceptance checks. Deployment, real multimodal provider checks, and documentation runtime verification remain follow-up work.
+
+- M0–M5开发与本机验收已完成，记录见仓库 `docs/development/progress.md`；真实电商模板8图84.84秒通过。
+- 在允许HTTP服务监听及Docker的环境完成生产编排验收；本机无监听的浏览器测试不替代部署验证。
+- 配置可用文本、视频和语音供应商后补真实多模态验收；供应商实际输出尺寸偏差继续跟踪。文档Windows standalone缓存问题需在合适环境补打包/运行验证。
+
 - Replace the Claude Code CLI adapter with a Claude Agent SDK adapter and improve the tool queue, following the [Local Agent Integration Plan](/docs/progress/local-agent-integration-plan).
 - Add Skill installation from web search, Skill resource-file management, and controlled local-memory persistence.

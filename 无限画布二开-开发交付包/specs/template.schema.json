@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/canvas-template.json",
+  "title": "CanvasTemplateBody",
+  "description": "行业模板主体，存于 templates.body。ops 复用 web/src/lib/canvas/canvas-agent-ops.ts 的 CanvasAgentOp（不含 run_generation / set_viewport / select_nodes，这些由运行时生成）。",
+  "type": "object",
+  "required": ["version", "variables", "ops", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9_]{0,31}$" },
+          "label": { "type": "string" },
+          "type": { "enum": ["text", "image", "select"] },
+          "required": { "type": "boolean", "default": true },
+          "placeholder": { "type": "string" },
+          "default": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" }, "description": "仅 select" },
+          "bindNode": { "type": "string", "description": "仅 image：把图片写入哪个局部节点 id（该节点须为 image 类型）" },
+          "allowBrandSku": { "type": "boolean", "default": false, "description": "仅 image：允许从当前品牌的 SKU 里选" }
+        }
+      }
+    },
+    "ops": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["type", "id", "nodeType"],
+            "properties": {
+              "type": { "const": "add_node" },
+              "id": { "type": "string", "description": "模板内局部 id，实例化时重映射" },
+              "nodeType": { "type": "string", "description": "image | text | config | video | audio | group | <pluginId>:<name>" },
+              "title": { "type": "string" },
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "width": { "type": "number" },
+              "height": { "type": "number" },
+              "metadata": { "type": "object", "description": "CanvasNodeMetadata；字符串字段可含 {{var.key}} 与 @[node:<局部id>]" }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["type", "fromNodeId", "toNodeId"],
+            "properties": {
+              "type": { "const": "connect_nodes" },
+              "fromNodeId": { "type": "string" },
+              "toNodeId": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["label", "nodeIds", "mode"],
+        "additionalProperties": false,
+        "properties": {
+          "label": { "type": "string" },
+          "nodeIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "本步要运行生成的局部节点 id，同步内并发" },
+          "mode": { "enum": ["text", "image", "video", "audio"] },
+          "estimate": { "type": "integer", "minimum": 0, "description": "仅用于展示的预估点数" }
+        }
+      }
+    }
+  }
+}

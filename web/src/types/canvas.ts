@@ -45,6 +45,8 @@ export type CanvasNodeText = {
 };
 
 export type CanvasNodeMetadata = {
+    templateRun?: TemplateRun;
+    brandKit?: boolean;
     content?: string;
     composerContent?: string;
     prompt?: string;
@@ -83,6 +85,8 @@ export type CanvasNodeMetadata = {
     durationMs?: number;
     videoTaskId?: string;
     videoTaskProvider?: "openai" | "gemini";
+    videoTaskWorkspaceId?: string;
+    videoTaskUserId?: string;
     groupId?: string;
     interactive?: boolean; // Plugin node interaction/move state; see CanvasNodeDefinition.interactionToggle.
 };
@@ -164,3 +168,4 @@ export type ContextMenuState =
           y: number;
           connectionId: string;
       };
+import type { TemplateRun } from "@/lib/templates/types";

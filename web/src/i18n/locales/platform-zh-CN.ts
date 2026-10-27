@@ -1,0 +1,31 @@
+import brand from "./brand-zh-CN";
+import template from "./template-zh-CN";
+import home from "./home-zh-CN";
+export default {
+    ...brand,
+    ...template,
+    ...home,
+    sessionChanged: "登录账号已变化，请重新发起操作", taskWorkspaceChanged: "请切换到创建此任务的工作区后继续",
+    platformChannel: "平台渠道", modelUnavailable: "平台模型暂不可用，请重新选择模型", byokTitle: "自带 Key（BYOK）", byokDescription: "使用自己的服务商 API Key，保存在当前浏览器，由浏览器直连服务商，不扣平台点数。", managedChannel: "由平台统一管理", configureByok: "配置自带 Key",
+    creditsLimitTitle: "已达到成员月度额度", insufficientCredits: "点数不足", understood: "知道了", goToBilling: "查看用量与计费", billingDisabled: "当前未启用平台计费", estimatedCredits: "预计消耗 {{count}} 点", remainingAfter: "生成后预计剩余 {{count}} 点", failedRefund: "失败自动退点", generateWithCost: "生成 · {{count}} 点",
+    pricing: { per_image: "标准 {{standard}} 点/张 · 高清 {{hd}} 点/张", per_second: "{{price}} 点/秒", per_1k_tokens: "输入 {{input}} / 输出 {{output}} 点/千 token · 预扣 {{hold}} 点", per_1k_chars: "{{price}} 点/千字符" },
+    pricingUnits: { per_image: "按图片", per_second: "按秒", per_1k_tokens: "按千 token", per_1k_chars: "按千字符" },
+    priceFields: { standard: "标准图点数（最长边 ≤ 1536）", hd: "高清图点数（最长边 > 1536）", price: "单位点数", input: "输入每千 token", output: "输出每千 token", hold: "预扣点数", min: "最低消费点数" },
+    capabilities: { image: "图片", video: "视频", text: "文本", audio: "语音" },
+    exportBill: "导出账单", redeemCode: "兑换码", redeemRequired: "请输入兑换码", redeem: "兑换点数", redeemSuccess: "成功兑换 {{count}} 点", time: "时间", transactionType: "流水类型", jobId: "任务编号", note: "备注", projectedDepletion: "按近期用量预计可用至 {{date}}", noDepletionEstimate: "用量数据不足，暂不预测耗尽时间", monthComparison: "较上月同期 {{value}}%", noComparison: "暂无上月同期数据", generationCount: "本月生成次数", successRate: "成功率 {{rate}}% · 失败 {{count}} 次", dailyUsage: "每日点数消耗", noUsage: "暂无用量记录", memberUsage: "成员用量", generationJobs: "生成记录", status: "状态", model: "模型", frozenCredits: "预扣 {{count}} 点", loadMore: "加载更多", ledgerTitle: "点数流水",
+    jobStatuses: { held: "生成中", succeeded: "已完成", failed: "失败已退点", timeout: "超时已退点" }, transactions: { grant: "发放", hold: "预扣", settle: "结算", refund: "退还", expire: "到期", adjust: "调整" },
+    topupTitle: "补充创作点数", topupDescription: "联系平台管理员购买点数包，取得兑换码后在此兑换。", ownerRedeemOnly: "请由工作区所有者兑换点数。", modelPricing: "模型与定价", noPlatformModels: "暂无可用平台模型，可使用自带 Key 渠道。",
+    admin: "平台管理", adminOnly: "仅平台管理员可访问此页面", adminTitle: "平台管理", adminDescription: "管理供应商、模型定价、工作区额度和兑换码", providers: "供应商", workspaceCredits: "工作区额度", addProvider: "添加供应商", editProvider: "编辑供应商", baseUrl: "API 地址", apiKey: "API Key", active: "已启用", inactive: "已停用", testConnection: "测试连接", connectionSuccess: "连接成功，可用模型如下", deleteProviderConfirm: "删除供应商「{{name}}」？", keepKeyHint: "留空保留现有 Key；填写后将替换。", serverKeyHint: "Key 仅在服务端加密保存，保存后只展示末四位。",
+    addModel: "添加模型", editModel: "编辑模型", displayName: "显示名称", capability: "模型能力", disableModelConfirm: "停用模型「{{name}}」？", disable: "停用", modelId: "模型 ID", sort: "排序", supportsEdit: "支持图片编辑", maxReferences: "最大参考图数量", providerRoutes: "供应商路由", provider: "供应商", upstreamModel: "上游模型名称", priority: "优先级", addRoute: "添加路由", noProviders: "请先添加供应商，再配置模型路由。",
+    searchWorkspace: "搜索工作区名称或所有者邮箱", ownerEmail: "所有者邮箱", plan: "套餐", grantCredits: "发放点数", setPlan: "设置套餐", creditKind: "点数类型", validDays: "有效天数", noExpiryHint: "留空表示永不过期", planResetHint: "保存后立即重置当前套餐周期和套餐点数，充值及赠送点数保持不变。", planMonthlyCredits: "每月套餐点数", codeCount: "生成数量", maxUses: "最大兑换次数", usedCount: "已兑换次数", expiresAt: "兑换码有效期", noExpiry: "永不过期", createCodes: "生成兑换码", codesCreated: "已生成 {{count}} 个兑换码", exportCreatedCodes: "导出本次兑换码", exportCsv: "导出 CSV",
+    tagline: "AI 视觉创作画布", basedOn: "基于 infinite-canvas", login: "登录", register: "注册", logout: "退出登录",
+    email: "邮箱", emailRequired: "请输入邮箱", emailInvalid: "请输入有效的邮箱地址", password: "密码", passwordRequired: "请输入密码", passwordLength: "密码至少 8 位",
+    name: "姓名", nameRequired: "请输入姓名", nameTooLong: "姓名不能超过 40 个字符", noAccount: "没有账号？注册", hasAccount: "已有账号？登录",
+    requestFailed: "请求失败，请稍后重试", loadFailed: "加载失败", retry: "重试", backHome: "返回首页", saved: "已保存", save: "保存", edit: "编辑", remove: "移除", actions: "操作",
+    mainNavigation: "工作区导航", switchWorkspace: "切换工作区", createWorkspace: "创建团队工作区", workspaceName: "工作区名称", workspaceNameRequired: "请输入工作区名称", workspaceCreated: "工作区已创建", renameWorkspace: "修改工作区名称", accountMenu: "账号菜单", more: "更多工具", newCanvas: "新建画布",
+    navigation: { home: "首页", canvas: "我的画布", templates: "模板中心", brand: "品牌资产", assets: "素材库", prompts: "提示词库", team: "团队成员", billing: "用量与计费", config: "设置" },
+    roles: { owner: "所有者", admin: "管理员", member: "成员" }, plans: { free: "免费版", team: "团队版", enterprise: "企业版" },
+    teamTitle: "团队成员", teamDescription: "管理「{{workspace}}」的成员、角色与月度额度", memberList: "工作区成员", member: "成员", role: "角色", you: "（你）", monthlyCap: "月度上限", unlimited: "不限", joinedAt: "加入时间", ownerProtected: "工作区所有者", editMember: "编辑成员", capHint: "留空表示不限；月度上限仅对成员生效，管理员不受限制。", removeMemberTitle: "移除 {{name}}？", removeMemberDescription: "该成员将失去这个工作区的访问权限。", memberRemoved: "成员已移除",
+    inviteMember: "邀请成员", inviteHint: "创建有效期 7 天的邀请链接，复制后发送给对方。", createInvite: "生成邀请链接", inviteReady: "邀请链接已生成", inviteLink: "邀请链接", copyInvite: "复制邀请链接", inviteValidUntil: "有效期至 {{date}}", joinWorkspace: "加入工作区", inviteDescription: "你受邀加入「{{workspace}}」", inviteExpired: "邀请已过期，请联系管理员获取新链接", acceptInvite: "接受邀请", loginToAccept: "登录后接受", registerToAccept: "注册并加入工作区", inviteAccepted: "已加入工作区",
+    billingTitle: "用量与计费", usageTitle: "用量统计", billingDescription: "点数余额与本月用量，失败任务自动退点", balance: "剩余点数", monthCharged: "本月消耗", myMonthCharged: "我的本月消耗", monthRefunded: "失败已退还", credits: "点", creditAmount: "{{count}} 点", viewBilling: "查看点数与用量", balanceBreakdown: "余额明细", buckets: { subscription: "套餐点数", purchase: "充值点数", gift: "赠送点数" }, planDescription: "{{plan}} · 每月 {{credits}} 点 · {{date}} 重置",
+};

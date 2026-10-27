@@ -1,0 +1,23 @@
+import { platformApi } from "./client";
+import type { ModelCapability, PriceRule, Page, Workspace } from "./types";
+
+export type Provider = { id: string; name: string; baseUrl: string; apiFormat: "openai"; isActive: boolean; createdAt: string; last4: string };
+export type ProviderInput = { name: string; baseUrl: string; apiKey?: string; isActive?: boolean };
+export type ManagedModel = { id: string; displayName: string; capability: ModelCapability; supportsEdit: boolean; maxReferenceImages: number; isActive: boolean; sort: number; routes: { providerId: string; upstreamModel: string; priority: number }[]; pricing: PriceRule };
+export type AdminWorkspace = { id: string; name: string; kind: "personal" | "team"; ownerEmail: string; plan: Workspace["plan"]; planMonthlyCredits: number; periodEnd: string; balance: number; monthCharged: number };
+export type RedeemCode = { code: string; credits: number; kind: "purchase" | "gift"; validDays: number | null; maxUses: number; usedCount: number; expiresAt: string | null; note: string | null; createdAt: string };
+export type GrantInput = { credits: number; kind: "purchase" | "gift"; validDays?: number | null; note?: string };
+export type RedeemCodeInput = GrantInput & { count: number; maxUses?: number; expiresAt?: string | null };
+const path = (section: string, id: string) => `/admin/${section}/${encodeURIComponent(id)}`;
+export const listProviders = async (signal?: AbortSignal) => (await platformApi.get<Provider[]>("/admin/providers", { signal })).data;
+export const saveProvider = async (input: ProviderInput, id?: string) => (await (id ? platformApi.patch<Provider>(path("providers", id), input) : platformApi.post<Provider>("/admin/providers", input))).data;
+export const deleteProvider = async (id: string) => { await platformApi.delete(path("providers", id)); };
+export const testProvider = async (id: string) => (await platformApi.post<{ ok: boolean; models: string[] }>(`${path("providers", id)}/test`)).data;
+export const listManagedModels = async (signal?: AbortSignal) => (await platformApi.get<ManagedModel[]>("/admin/models", { signal })).data;
+export const saveManagedModel = async (input: ManagedModel, id?: string) => (await (id ? platformApi.patch<ManagedModel>(path("models", id), input) : platformApi.post<ManagedModel>("/admin/models", input))).data;
+export const disableManagedModel = async (id: string) => { await platformApi.delete(path("models", id)); };
+export const listAdminWorkspaces = async (q: string, cursor?: string, signal?: AbortSignal) => (await platformApi.get<Page<AdminWorkspace>>("/admin/workspaces", { params: { q, cursor }, signal })).data;
+export const grantWorkspace = async (id: string, input: GrantInput) => { await platformApi.post(`${path("workspaces", id)}/grant`, input); };
+export const setWorkspacePlan = async (id: string, input: { plan: Workspace["plan"]; monthlyCredits: number }) => { await platformApi.put(`${path("workspaces", id)}/plan`, input); };
+export const listRedeemCodes = async (signal?: AbortSignal) => (await platformApi.get<RedeemCode[]>("/admin/redeem-codes", { signal })).data;
+export const createRedeemCodes = async (input: RedeemCodeInput) => (await platformApi.post<{ codes: string[] }>("/admin/redeem-codes", input)).data;

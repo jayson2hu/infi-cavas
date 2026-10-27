@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { isPlatformEnabled } from "@/lib/platform";
 
 export type ThemeName = "light" | "dark";
 
@@ -11,7 +12,7 @@ type ThemeStore = {
 export const useThemeStore = create<ThemeStore>()(
     persist(
         (set) => ({
-            theme: "dark",
+            theme: isPlatformEnabled() ? "light" : "dark",
             setTheme: (theme) => set({ theme }),
         }),
         { name: "infinite-canvas:theme_store" },

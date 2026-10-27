@@ -8,6 +8,9 @@
     "features",
     "render",
     "docker",
+    "platform-deployment",
+    "platform-billing",
+    "brand-templates",
     "third-party-prompt-repositories",
     "[Live Demo](https://canvas.best/)"
   ]

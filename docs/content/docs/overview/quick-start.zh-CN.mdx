@@ -7,6 +7,8 @@ description: 用最少步骤把无限画布跑起来
 
 如果你只是想先把项目跑起来，优先部署或启动 `web/` 前端。
 
+需要账号、工作区、计费、品牌和模板时，请按[平台模式部署](/zh-CN/docs/overview/platform-deployment)操作。以下为纯前端自带 Key 模式，在当前二开仓库源码中执行；原上游仓库不包含这些平台扩展。
+
 ## Vercel 部署
 
 在 Vercel 中导入仓库即可，根目录 `vercel.json` 会构建 `web/`。当前版本的 AI 请求由浏览器前台直连用户自己的 OpenAI 兼容地址，不需要额外配置服务端。
@@ -14,8 +16,6 @@ description: 用最少步骤把无限画布跑起来
 ## 本地启动
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas
 cd web
 bun install
 bun run dev

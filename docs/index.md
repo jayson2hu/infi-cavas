@@ -6,6 +6,9 @@
 - [Features](/docs/overview/features)
 - [Deploy on Render](/docs/overview/render)
 - [Docker Deployment](/docs/overview/docker)
+- [Platform Deployment](/docs/overview/platform-deployment)
+- [Platform Billing](/docs/overview/platform-billing)
+- [Brands and Templates](/docs/overview/brand-templates)
 - [Third-party Prompt Sources](/docs/overview/third-party-prompt-repositories)
 
 ## Canvas Guide
@@ -27,6 +30,7 @@
 ## Support and Security
 
 - [Report a Vulnerability](/docs/support/security)
+- [Platform Security and Data Boundaries](/docs/support/platform-security)
 - [Sponsor the Project](/docs/support/sponsor)
 
 ## Project Progress
@@ -38,4 +42,5 @@
 ## Notes
 
 - Canvas projects and My Assets are primarily stored in the browser. WebDAV can be configured for cross-device synchronization.
-- The AI API key is stored in the browser, which sends requests directly to OpenAI-compatible endpoints.
+- BYOK keys are stored in the browser and used for direct provider requests. Optional platform mode keeps provider keys encrypted on the server and stores workspace, brand, template, billing, and job data in PostgreSQL/S3.
+- Development progress, problems, and acceptance evidence for this extension are in the repository's `docs/development/` directory. Production deployment and provider capability limitations are recorded separately from local integration results.

@@ -1,0 +1,544 @@
+openapi: 3.1.0
+info:
+  title: 无限画布二开 · 业务 API
+  version: 0.1.0
+  description: |
+    前缀 /api。鉴权：Cookie `ic_session`（登录后下发）。工作区上下文：请求头 `X-IC-Workspace`。
+    错误统一格式：`{ "error": { "code": "string", "message": "中文可读信息", ...extra } }`。
+    时间为 ISO 8601 字符串，点数为整数，列表分页使用 `cursor`（返回 `nextCursor`，为 null 表示到底）。
+
+    模型网关 /api/gateway/v1/* 为 OpenAI 兼容接口，未在此逐一展开，见 03-技术方案.md §4；
+    其在 OpenAI 规范之外的约定：
+      - 请求头：X-IC-Workspace / X-IC-Brand（id 或 none）/ X-IC-Project / X-IC-Node / X-IC-Source
+      - 响应头：X-IC-Credits-Charged、X-IC-Credits-Balance、X-IC-Job-Id
+      - 402：{ error: { code: "insufficient_credits" | "member_cap_exceeded", message, required, balance } }
+      - 422：{ error: { code: "content_blocked", message } }
+servers:
+  - url: /api
+security:
+  - session: []
+tags:
+  - name: auth
+  - name: workspaces
+  - name: brands
+  - name: templates
+  - name: billing
+  - name: uploads
+  - name: admin
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                name: { type: string, maxLength: 40 }
+                inviteToken: { type: string, description: 注册同时接受邀请 }
+      responses:
+        "201": { description: 注册成功并已登录（Set-Cookie）, content: { application/json: { schema: { $ref: "#/components/schemas/Me" } } } }
+        "403": { $ref: "#/components/responses/Error", description: ALLOW_SIGNUP=false 且无邀请 }
+        "409": { $ref: "#/components/responses/Error", description: 邮箱已注册 }
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200": { description: OK（Set-Cookie）, content: { application/json: { schema: { $ref: "#/components/schemas/Me" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error", description: 同 IP 5 分钟内失败 10 次 }
+  /auth/logout:
+    post:
+      tags: [auth]
+      responses: { "204": { description: 已退出 } }
+  /auth/me:
+    get:
+      tags: [auth]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Me" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /workspaces:
+    get:
+      tags: [workspaces]
+      responses:
+        "200": { description: 我加入的工作区, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Workspace" } } } } }
+    post:
+      tags: [workspaces]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string } } } } }
+      responses:
+        "201": { description: 创建团队工作区，当前用户为 owner, content: { application/json: { schema: { $ref: "#/components/schemas/Workspace" } } } }
+  /workspaces/{workspaceId}:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }]
+    patch:
+      tags: [workspaces]
+      description: owner/admin
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, defaultBrandId: { type: [string, "null"] } } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Workspace" } } } } }
+  /workspaces/{workspaceId}/members:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }]
+    get:
+      tags: [workspaces]
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Member" } } } } } }
+  /workspaces/{workspaceId}/members/{userId}:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }, { name: userId, in: path, required: true, schema: { type: string } }]
+    patch:
+      tags: [workspaces]
+      description: owner/admin；不能修改 owner
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { role: { enum: [admin, member] }, monthlyCap: { type: [integer, "null"], minimum: 0 } } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Member" } } } } }
+    delete:
+      tags: [workspaces]
+      responses: { "204": { description: 已移除 } }
+  /workspaces/{workspaceId}/invites:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }]
+    post:
+      tags: [workspaces]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { role: { enum: [admin, member], default: member } } } } }
+      responses:
+        "201": { description: 邀请链接, content: { application/json: { schema: { type: object, properties: { token: { type: string }, url: { type: string }, expiresAt: { type: string } } } } } }
+  /invites/{token}:
+    parameters: [{ name: token, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [workspaces]
+      security: []
+      responses: { "200": { description: 邀请信息, content: { application/json: { schema: { type: object, properties: { workspaceName: { type: string }, role: { type: string }, expired: { type: boolean } } } } } } }
+  /invites/{token}/accept:
+    parameters: [{ name: token, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [workspaces]
+      responses: { "200": { description: 已加入, content: { application/json: { schema: { $ref: "#/components/schemas/Workspace" } } } } }
+
+  /brands:
+    get:
+      tags: [brands]
+      responses: { "200": { description: 当前工作区的品牌（含 isDefault）, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/BrandSummary" } } } } } }
+    post:
+      tags: [brands]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/BrandInput" } } } }
+      responses: { "201": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Brand" } } } } }
+  /brands/{brandId}:
+    parameters: [{ $ref: "#/components/parameters/brandId" }]
+    get:
+      tags: [brands]
+      responses: { "200": { description: 完整品牌（含颜色与全部素材）, content: { application/json: { schema: { $ref: "#/components/schemas/Brand" } } } } }
+    patch:
+      tags: [brands]
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/BrandInput" } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Brand" } } } } }
+    delete:
+      tags: [brands]
+      responses: { "204": { description: 已删除（同时删除素材对象） } }
+  /brands/{brandId}/colors:
+    parameters: [{ $ref: "#/components/parameters/brandId" }]
+    put:
+      tags: [brands]
+      description: 整体替换颜色列表
+      requestBody: { required: true, content: { application/json: { schema: { type: array, maxItems: 12, items: { $ref: "#/components/schemas/BrandColor" } } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/BrandColor" } } } } } }
+  /brands/{brandId}/assets:
+    parameters: [{ $ref: "#/components/parameters/brandId" }]
+    post:
+      tags: [brands]
+      description: 先 /uploads/presign 上传，再提交 objectKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, title, objectKey]
+              properties:
+                kind: { enum: [logo, sku, style_ref] }
+                title: { type: string }
+                spec: { type: string }
+                objectKey: { type: string }
+                attachOnGenerate: { type: boolean }
+                tags: { type: array, items: { type: string } }
+      responses: { "201": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/BrandAsset" } } } } }
+  /brands/{brandId}/assets/{assetId}:
+    parameters: [{ $ref: "#/components/parameters/brandId" }, { name: assetId, in: path, required: true, schema: { type: string } }]
+    patch:
+      tags: [brands]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { title: { type: string }, spec: { type: string }, attachOnGenerate: { type: boolean }, sort: { type: integer }, tags: { type: array, items: { type: string } } } } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/BrandAsset" } } } } }
+    delete:
+      tags: [brands]
+      responses: { "204": { description: 已删除 } }
+  /brands/{brandId}/injection-preview:
+    parameters: [{ $ref: "#/components/parameters/brandId" }]
+    get:
+      tags: [brands]
+      description: 与网关 brand-inject 同一函数，用示例提示词生成预览
+      parameters: [{ name: prompt, in: query, schema: { type: string } }]
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { text: { type: string }, attachedReferenceCount: { type: integer } } } } }
+
+  /templates:
+    get:
+      tags: [templates]
+      parameters:
+        - { name: category, in: query, schema: { enum: [ecommerce, short_video, brand, social, other] } }
+        - { name: scope, in: query, schema: { enum: [all, official, team], default: all } }
+        - { name: q, in: query, schema: { type: string } }
+      responses: { "200": { description: 列表不含 body, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/TemplateSummary" } } } } } }
+    post:
+      tags: [templates]
+      description: 存为团队模板（owner/admin，或品牌编辑者）
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/TemplateInput" } } } }
+      responses:
+        "201": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Template" } } } }
+        "422": { $ref: "#/components/responses/Error", description: body 不符合 template.schema.json }
+  /templates/{templateId}:
+    parameters: [{ name: templateId, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [templates]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Template" } } } } }
+    patch:
+      tags: [templates]
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/TemplateInput" } } } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Template" } } } } }
+    delete:
+      tags: [templates]
+      responses: { "204": { description: 已删除（官方模板仅平台管理员可删） } }
+  /templates/{templateId}/use:
+    parameters: [{ name: templateId, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [templates]
+      description: 实例化时调用，use_count + 1（不扣点）
+      responses: { "204": { description: OK } }
+
+  /billing/summary:
+    get:
+      tags: [billing]
+      responses:
+        "200":
+          description: 设计稿 05 顶部四张卡片
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plan: { enum: [free, team, enterprise] }
+                  planMonthlyCredits: { type: integer }
+                  periodEnd: { type: string }
+                  balance: { type: integer }
+                  balanceBreakdown: { type: object, properties: { subscription: { type: integer }, purchase: { type: integer }, gift: { type: integer } } }
+                  monthCharged: { type: integer }
+                  lastMonthSamePeriodCharged: { type: integer }
+                  monthJobs: { type: object, properties: { image: { type: integer }, video: { type: integer }, text: { type: integer }, audio: { type: integer } } }
+                  monthRefunded: { type: integer }
+                  monthFailedJobs: { type: integer }
+                  successRate: { type: number }
+                  projectedDepletionDate: { type: [string, "null"], description: 按近 7 日日均消耗推算 }
+                  myMonthCharged: { type: integer }
+                  myMonthlyCap: { type: [integer, "null"] }
+                  billingEnabled: { type: boolean }
+  /billing/daily:
+    get:
+      tags: [billing]
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: 每日消耗（按 capability 拆分）
+          content: { application/json: { schema: { type: array, items: { type: object, properties: { date: { type: string }, image: { type: integer }, video: { type: integer }, text: { type: integer }, audio: { type: integer } } } } } }
+  /billing/members:
+    get:
+      tags: [billing]
+      description: owner/admin
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: array, items: { type: object, properties: { userId: { type: string }, name: { type: string }, role: { type: string }, monthCharged: { type: integer }, monthlyCap: { type: [integer, "null"] } } } } } }
+  /billing/jobs:
+    get:
+      tags: [billing]
+      description: 生成记录（member 只看自己的）
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { enum: [held, succeeded, failed, timeout] } }
+        - { name: brandId, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: "#/components/schemas/Job" } }, nextCursor: { type: [string, "null"] } } } } }
+  /billing/transactions:
+    get:
+      tags: [billing]
+      description: owner/admin；账本流水
+      parameters: [{ name: cursor, in: query, schema: { type: string } }]
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { type: object, properties: { id: { type: string }, type: { type: string }, amount: { type: integer }, jobId: { type: [string, "null"] }, note: { type: [string, "null"] }, createdAt: { type: string } } } }, nextCursor: { type: [string, "null"] } } } } }
+  /billing/redeem:
+    post:
+      tags: [billing]
+      description: owner
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [code], properties: { code: { type: string } } } } } }
+      responses:
+        "200": { description: 兑换成功, content: { application/json: { schema: { type: object, properties: { credits: { type: integer }, balance: { type: integer } } } } } }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error", description: 已用完/已兑换过/已过期 }
+  /billing/packages:
+    get:
+      tags: [billing]
+      responses: { "200": { description: 充值包（第 2 期支付使用；MVP 前端仅展示并提示联系管理员）, content: { application/json: { schema: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, credits: { type: integer }, bonusCredits: { type: integer }, priceCents: { type: integer } } } } } } } }
+
+  /uploads/presign:
+    post:
+      tags: [uploads]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, mimeType, bytes]
+              properties:
+                purpose: { enum: [brand_asset, template_cover, template_image, avatar] }
+                mimeType: { enum: [image/png, image/jpeg, image/webp] }
+                bytes: { type: integer, maximum: 20971520 }
+      responses:
+        "200": { description: PUT 到 uploadUrl（5 分钟有效）, content: { application/json: { schema: { type: object, properties: { uploadUrl: { type: string }, objectKey: { type: string }, headers: { type: object, additionalProperties: { type: string } } } } } } }
+  /files/{objectKey}:
+    get:
+      tags: [uploads]
+      parameters: [{ name: objectKey, in: path, required: true, schema: { type: string }, description: 允许包含 / }]
+      responses:
+        "302": { description: 跳转到 10 分钟有效的预签名 GET URL }
+        "403": { $ref: "#/components/responses/Error" }
+
+  /admin/providers:
+    get: { tags: [admin], responses: { "200": { description: 列表（apiKey 仅返回 last4） } } }
+    post:
+      tags: [admin]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name, baseUrl, apiKey], properties: { name: { type: string }, baseUrl: { type: string }, apiKey: { type: string } } } } } }
+      responses: { "201": { description: OK } }
+  /admin/providers/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    patch: { tags: [admin], responses: { "200": { description: OK（apiKey 传空表示不改） } } }
+    delete: { tags: [admin], responses: { "204": { description: OK } } }
+  /admin/providers/{id}/test:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    post: { tags: [admin], description: 调用上游 /v1/models 测试连通, responses: { "200": { description: "{ ok, models: string[] }" } } }
+  /admin/models:
+    get: { tags: [admin], responses: { "200": { description: 含 routes 与 pricing } } }
+    post:
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, displayName, capability, routes, pricing]
+              properties:
+                id: { type: string }
+                displayName: { type: string }
+                capability: { enum: [image, video, text, audio] }
+                supportsEdit: { type: boolean }
+                maxReferenceImages: { type: integer }
+                isActive: { type: boolean }
+                sort: { type: integer }
+                routes: { type: array, items: { type: object, properties: { providerId: { type: string }, upstreamModel: { type: string }, priority: { type: integer } } } }
+                pricing: { type: object, properties: { unit: { enum: [per_image, per_second, per_1k_tokens, per_1k_chars] }, config: { type: object } } }
+      responses: { "201": { description: OK } }
+  /admin/models/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    patch: { tags: [admin], responses: { "200": { description: OK } } }
+    delete: { tags: [admin], responses: { "204": { description: 停用（is_active=false），不物理删除 } } }
+  /admin/workspaces:
+    get:
+      tags: [admin]
+      parameters: [{ name: q, in: query, schema: { type: string } }, { name: cursor, in: query, schema: { type: string } }]
+      responses: { "200": { description: 工作区列表（含余额、本月消耗、套餐） } }
+  /admin/workspaces/{workspaceId}/grant:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }]
+    post:
+      tags: [admin]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [credits, kind], properties: { credits: { type: integer, minimum: 1 }, kind: { enum: [purchase, gift] }, validDays: { type: [integer, "null"] }, note: { type: string } } } } } }
+      responses: { "200": { description: OK } }
+  /admin/workspaces/{workspaceId}/plan:
+    parameters: [{ $ref: "#/components/parameters/workspaceId" }]
+    put:
+      tags: [admin]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [plan, monthlyCredits], properties: { plan: { enum: [free, team, enterprise] }, monthlyCredits: { type: integer } } } } } }
+      responses: { "200": { description: 立即发放当期套餐点数并重置周期 } }
+  /admin/redeem-codes:
+    get: { tags: [admin], responses: { "200": { description: 列表 } } }
+    post:
+      tags: [admin]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [credits, kind, count], properties: { credits: { type: integer }, kind: { enum: [purchase, gift] }, count: { type: integer, maximum: 500 }, maxUses: { type: integer, default: 1 }, validDays: { type: [integer, "null"] }, expiresAt: { type: [string, "null"] }, note: { type: string } } } } } }
+      responses: { "201": { description: "{ codes: string[] }（可导出 CSV）" } }
+
+components:
+  securitySchemes:
+    session: { type: apiKey, in: cookie, name: ic_session }
+  parameters:
+    workspaceId: { name: workspaceId, in: path, required: true, schema: { type: string } }
+    brandId: { name: brandId, in: path, required: true, schema: { type: string } }
+  responses:
+    Error:
+      description: 错误
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: object, required: [code, message], properties: { code: { type: string }, message: { type: string } } }
+    Me:
+      type: object
+      properties:
+        user: { type: object, properties: { id: { type: string }, email: { type: string }, name: { type: string }, avatarUrl: { type: [string, "null"] }, isPlatformAdmin: { type: boolean } } }
+        workspaces: { type: array, items: { $ref: "#/components/schemas/Workspace" } }
+        currentWorkspaceId: { type: string }
+    Workspace:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        kind: { enum: [personal, team] }
+        role: { enum: [owner, admin, member], description: 当前用户在该工作区的角色 }
+        plan: { enum: [free, team, enterprise] }
+        defaultBrandId: { type: [string, "null"] }
+        memberCount: { type: integer }
+    Member:
+      type: object
+      properties:
+        userId: { type: string }
+        name: { type: string }
+        email: { type: string }
+        avatarUrl: { type: [string, "null"] }
+        role: { enum: [owner, admin, member] }
+        monthlyCap: { type: [integer, "null"] }
+        joinedAt: { type: string }
+    BrandColor:
+      type: object
+      required: [name, role, hex]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { enum: [primary, secondary, background, accent] }
+        hex: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        sort: { type: integer }
+    BrandAsset:
+      type: object
+      properties:
+        id: { type: string }
+        kind: { enum: [logo, sku, style_ref] }
+        title: { type: string }
+        spec: { type: [string, "null"] }
+        url: { type: string, description: "/api/files/<objectKey>" }
+        width: { type: [integer, "null"] }
+        height: { type: [integer, "null"] }
+        attachOnGenerate: { type: boolean }
+        tags: { type: array, items: { type: string } }
+        sort: { type: integer }
+    BrandInput:
+      type: object
+      properties:
+        name: { type: string }
+        industry: { type: string }
+        description: { type: string }
+        requiredTerms: { type: array, items: { type: string }, maxItems: 20 }
+        avoidTerms: { type: array, items: { type: string }, maxItems: 30 }
+        defaultParams: { type: object }
+        enforced: { type: boolean }
+        editorUserIds: { type: array, items: { type: string } }
+    BrandSummary:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        industry: { type: [string, "null"] }
+        isDefault: { type: boolean }
+        logoUrl: { type: [string, "null"] }
+        colors: { type: array, items: { $ref: "#/components/schemas/BrandColor" } }
+        skuCount: { type: integer }
+        usedInProjects: { type: integer, description: 近 30 天出现在 generation_jobs.project_id 的去重数 }
+        updatedAt: { type: string }
+        updatedByName: { type: string }
+    Brand:
+      allOf:
+        - $ref: "#/components/schemas/BrandSummary"
+        - $ref: "#/components/schemas/BrandInput"
+        - type: object
+          properties:
+            assets: { type: array, items: { $ref: "#/components/schemas/BrandAsset" } }
+            canEdit: { type: boolean }
+    TemplateSummary:
+      type: object
+      properties:
+        id: { type: string }
+        scope: { enum: [official, team] }
+        name: { type: string }
+        category: { type: string }
+        description: { type: string }
+        coverUrl: { type: [string, "null"] }
+        previewNodes: { type: array, items: { type: string } }
+        estimateCredits: { type: integer }
+        useCount: { type: integer }
+    TemplateInput:
+      type: object
+      required: [name, category, body]
+      properties:
+        name: { type: string }
+        category: { enum: [ecommerce, short_video, brand, social, other] }
+        description: { type: string }
+        coverObjectKey: { type: string }
+        previewNodes: { type: array, items: { type: string }, maxItems: 3 }
+        body: { type: object, description: 符合 specs/template.schema.json }
+    Template:
+      allOf:
+        - $ref: "#/components/schemas/TemplateSummary"
+        - type: object
+          properties:
+            body: { type: object }
+            canEdit: { type: boolean }
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        userName: { type: string }
+        modelId: { type: string }
+        capability: { type: string }
+        status: { enum: [held, succeeded, failed, timeout] }
+        estimateCredits: { type: integer }
+        chargedCredits: { type: integer }
+        brandId: { type: [string, "null"] }
+        projectId: { type: [string, "null"] }
+        source: { type: [string, "null"] }
+        params: { type: object }
+        prompt: { type: [string, "null"] }
+        error: { type: [string, "null"] }
+        outputs: { type: array, items: { type: object, properties: { kind: { type: string }, url: { type: string } } } }
+        createdAt: { type: string }
+        finishedAt: { type: [string, "null"] }

@@ -7,12 +7,10 @@ description: 使用 Docker Compose 部署无限画布
 
 如果你希望在自己的机器或服务器上运行项目，可以直接使用 Docker Compose。
 
-## 使用发布镜像
+## 从当前源码启动纯前端
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas
-docker compose up -d
+docker compose -f docker-compose.web-only.yml up -d --build
 ```
 
 启动后访问：
@@ -20,6 +18,8 @@ docker compose up -d
 ```text
 http://localhost:3000
 ```
+
+主 Compose 文件现为工作区平台模式，需要配置 `.env`，详见[平台模式部署](/zh-CN/docs/overview/platform-deployment)。原上游发布镜像提供原版纯前端，不包含本分支的平台扩展。
 
 ## 本地构建镜像
 
@@ -49,7 +49,7 @@ docker compose -f docker-compose.local.yml up -d --build
 
 ## 数据说明
 
-当前主应用镜像只启动 Next.js。画布、我的素材、生成记录和 AI API Key 默认保存在浏览器本地；第三方提示词由浏览器前端直连拉取，不需要额外挂载数据目录。
+纯前端应用镜像由 nginx 提供 Vite 构建的静态资源。画布、我的素材、生成记录和自带 Key 默认保存在浏览器本地；第三方提示词由浏览器前端直连拉取。平台模式另需持久化数据库和对象存储。Next.js 仅用于独立文档站。
 
 ## 统计分析（可选）
 
@@ -62,7 +62,7 @@ docker compose -f docker-compose.local.yml up -d --build
 | `ANALYTICS_GA4_ID` | Google Analytics 4 衡量 ID（`G-XXXX`） |
 | `ANALYTICS_BAIDU_ID` | 百度统计站点 ID（`hm.js?` 后面那串 hash） |
 
-在 `docker-compose.yml` 的 `environment` 中配置（文件内已附注释示例），下例同时启用 GA4 与百度：
+平台部署可在根 `.env` 配置统计变量；纯前端可在对应 Compose 服务的 `environment` 中配置。下例展示原上游纯前端镜像的设置方式：
 
 ```yaml
 services:

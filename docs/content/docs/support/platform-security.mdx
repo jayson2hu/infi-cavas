@@ -1,0 +1,35 @@
+---
+title: Platform Security and Data Boundaries
+description: Sessions, workspace access, secrets, plugin trust, and deployment boundaries
+---
+
+# Platform Security and Data Boundaries
+
+Platform provider keys are used only by the server and encrypted with AES-256-GCM using a key derived from `APP_SECRET`. Model and management responses do not return plaintext keys. Passwords use Argon2id, session cookies are HttpOnly, writes validate Origin, workspace routes enforce membership, and management routes require platform administrator access.
+
+## Data locations
+
+| Data | Storage |
+| --- | --- |
+| Accounts, workspaces, brands, team templates, ledger, and jobs | PostgreSQL |
+| Brand/template images and platform output archives | Private S3/MinIO bucket |
+| Canvases, canvas assets, and workbench history | Browser storage, with optional user-configured WebDAV |
+| BYOK channel configuration | Browser storage; direct browser-to-provider requests |
+
+Signing out does not erase local canvases or BYOK configuration. Local data in a shared browser profile is not partitioned by server-side workspace permissions. Export and clear local data when appropriate on a shared computer.
+
+Temporary uploads bind workspace, user, purpose, MIME type, and size. Final assets use separate objects that old signed PUT URLs cannot overwrite. Reads authorize the session and ownership before issuing temporary signed addresses. Anyone holding a signed URL can use it until expiry; do not treat it as a permanent public link. Use separate buckets per environment. Cleanup queues are namespaced by database address; all instances of one database must use a consistent explicit address.
+
+## Plugins and custom scripts
+
+Third-party canvas plugins and custom invocation scripts run in the page context. They can access local data and make requests using the current session. HttpOnly prevents directly reading cookie values, but does not prevent same-origin scripts from using session authority. Install only code you trust and review its source and updates.
+
+Hiding provider keys in the gateway does not sandbox third-party page code. BYOK keys remain accessible to trusted page code. Platform and BYOK requests have different data paths.
+
+## Operations
+
+`TRUST_PROXY` defaults to false. Production Compose exposes nginx, keeps Bun internal, and overwrites `X-Real-IP` before trusting it. Do not expose a proxy-trusting backend directly. Use HTTPS online and align `APP_ORIGIN`, the browser origin, and the public object-storage endpoint.
+
+Back up PostgreSQL, S3 objects, and `APP_SECRET`. Replacing that secret alone makes existing encrypted provider keys unreadable; plan a controlled migration first. Keep environment files, backups, signed URLs, and unredacted logs out of version control.
+
+Acceptance includes plaintext secret scanning, escaped JSON/SSE redaction, session/workspace races, ledger idempotence, and object authorization. This bounded evidence cannot guarantee that arbitrary future plugins, provider responses, or operational logs never leak data. See [Platform Deployment](/docs/overview/platform-deployment) and the upstream [Security Reporting](/docs/support/security) process.

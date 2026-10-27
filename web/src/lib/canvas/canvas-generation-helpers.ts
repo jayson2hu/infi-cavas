@@ -105,6 +105,7 @@ export function getInputSummary(inputs: NodeGenerationInput[]) {
 export function buildGenerationConfig(config: AiConfig, node: CanvasNodeData | undefined, mode: CanvasNodeGenerationMode): AiConfig {
     return {
         ...config,
+        platformContext: { ...config.platformContext, nodeId: node?.id, source: config.platformContext?.source || "canvas", brandKit: node?.metadata?.brandKit !== false },
         model: resolveModelForCapability(config, node?.metadata?.model, mode),
         reasoningEffort: node?.metadata?.reasoningEffort || config.reasoningEffort || defaultConfig.reasoningEffort,
         quality: node?.metadata?.quality || config.quality || defaultConfig.quality,
@@ -127,8 +128,14 @@ export function hasResumableVideoTask(node: CanvasNodeData) {
     return node.type === CanvasNodeType.Video && Boolean(node.metadata?.videoTaskId) && !node.metadata?.content;
 }
 
+/** Existing tasks only read their result; current brand loading must not block recovery. */
+export function buildVideoPollingConfig(config: AiConfig, node: CanvasNodeData): AiConfig {
+    const base = buildGenerationConfig(config, node, "video");
+    return { ...base, platformContext: base.platformContext ? { ...base.platformContext, brandReady: true, brand: undefined, defaultBrand: undefined, brandId: undefined } : undefined };
+}
+
 export function resetInterruptedGeneration(nodes: CanvasNodeData[]) {
-    return nodes.map((node) =>
+    return nodes.map((node) => node.metadata?.templateRun?.status === "running" ? { ...node, metadata: { ...node.metadata, templateRun: { ...node.metadata.templateRun, status: "stopped" as const } } } : node).map((node) =>
         node.metadata?.status === "loading"
             ? hasResumableVideoTask(node)
                 ? node

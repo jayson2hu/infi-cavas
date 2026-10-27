@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<title>工作台首页</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#f4f2ed}
+a{color:#2a49c9;text-decoration:none}a:hover{color:#1d3699}
+.nav{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:8px;color:#57534e;font-size:14px}
+.nav:hover{background:rgba(28,25,23,.05);color:#1c1917}
+.card{background:#fbfaf7;border:1px solid #e3dfd6;border-radius:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;font-size:12px;background:#eeebe4;color:#57534e}
+.mini{height:22px;padding:0 8px;border-radius:5px;border:1px solid #d6d3ca;background:#fbfaf7;font-size:11px;color:#57534e;display:flex;align-items:center;white-space:nowrap}
+</style></head>
+<body>
+
+
+<div style="min-height: 1000px; display: flex; flex-wrap: wrap; background: #f4f2ed; font-family: Inter, 'Noto Sans SC', system-ui, sans-serif; color: #1c1917">
+
+<nav aria-label="主导航" style="flex: 1 1 232px; box-sizing: border-box; padding: 20px 14px; border-right: 1px solid #e3dfd6; display: flex; flex-direction: column; gap: 4px; background: #f0eee8">
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px">
+<div style="width: 30px; height: 30px; border-radius: 8px; background: #1c1917; display: grid; place-items: center">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f4f2ed" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 12c0-2.8 2.2-5 5-5M17 12c0 2.8-2.2 5-5 5"></path><circle cx="12" cy="12" r="2"></circle></svg>
+</div>
+<div style="display: flex; flex-direction: column">
+<span style="font-weight: 700; font-size: 15px">[品牌名] 画布</span>
+<span style="font-size: 11px; color: #6b655d">基于 infinite-canvas</span>
+</div>
+</div>
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 12px; margin-bottom: 12px; border: 1px solid #e3dfd6; border-radius: 10px; background: #fbfaf7; font: inherit; font-size: 13px; color: #1c1917; cursor: pointer">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 22px; height: 22px; border-radius: 6px; background: #2a49c9; color: #fff; font-size: 11px; display: grid; place-items: center; font-weight: 600">星</span>星野电商 · 设计组</span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+</button>
+<a class="nav" href="Main.dc.html" style="background: #e7e5df; color: #1c1917; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"></path></svg>首页</a>
+<a class="nav" href="Canvas.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>我的画布</a>
+<a class="nav" href="Templates.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1.5"></rect><rect x="15" y="14" width="6" height="6" rx="1.5"></rect><path d="M9 7h4a2 2 0 0 1 2 2v5"></path></svg>模板中心</a>
+<a class="nav" href="Brand.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 9l9 12 9-12z"></path><path d="M3 9h18"></path></svg>品牌资产</a>
+<a class="nav" href="Brand.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="m21 16-5-5-9 9"></path></svg>素材库</a>
+<a class="nav" href="Templates.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h9M5 20h6"></path></svg>提示词库</a>
+<div style="height: 1px; background: #e3dfd6; margin: 10px 4px"></div>
+<a class="nav" href="Billing.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>团队成员</a>
+<a class="nav" href="Billing.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h4"></path></svg>用量与计费</a>
+<a class="nav" href="Billing.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg>设置</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+<div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 12px; color: #6b655d">本月点数</span>
+<span style="font-size: 12px; color: #6b655d">团队版</span>
+</div>
+<div style="font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums">6,420 <span style="font-size: 12px; font-weight: 500; color: #6b655d">/ 10,000</span></div>
+<div style="height: 6px; border-radius: 3px; background: #e7e5df; overflow: hidden"><div style="width: 64%; height: 100%; background: #1c1917; border-radius: 3px"></div></div>
+<a href="Billing.dc.html" style="font-size: 13px; font-weight: 600">充值点数 →</a>
+</div>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 28px">
+
+<header style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+<label style="flex: 1 1 320px; max-width: 480px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid #e3dfd6; border-radius: 10px; background: #fbfaf7; color: #6b655d">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">搜索</span>
+<input type="search" placeholder="搜索画布、模板、品牌素材" style="flex: 1 1 0%; border: 0px; outline: none; background: transparent; font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-language-override: inherit; font-size: 14px; color: rgb(28, 25, 23);">
+<span style="font-size: 11px; color: #6b655d; border: 1px solid #e3dfd6; border-radius: 4px; padding: 1px 5px">⌘K</span>
+</label>
+<div style="display: flex; gap: 10px; align-items: center">
+<a href="Templates.dc.html" style="height: 40px; padding: 0 16px; display: flex; align-items: center; border-radius: 10px; border: 1px solid #d6d3ca; color: #1c1917; font-size: 14px; font-weight: 500; background: #fbfaf7">从模板创建</a>
+<a href="Canvas.dc.html" style="height: 40px; padding: 0 16px; display: flex; align-items: center; gap: 6px; border-radius: 10px; background: #1c1917; color: #fafaf9; font-size: 14px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>新建画布</a>
+<div style="width: 36px; height: 36px; border-radius: 50%; background: #d9cfc0; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: #3f3a34">林</div>
+</div>
+</header>
+
+<section style="display: flex; flex-wrap: wrap; gap: 28px">
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div>
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em">从一个行业工作流开始</h1>
+<p style="margin: 6px 0 0; font-size: 14px; color: #6b655d">模板会在画布上铺好节点和连线，你只需替换输入素材，自动套用当前品牌套件。</p>
+</div>
+<a href="Templates.dc.html" style="font-size: 13px; font-weight: 600; white-space: nowrap">全部模板 →</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px">
+
+<a href="Canvas.dc.html" class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; color: #1c1917">
+<div style="height: 92px; border-radius: 8px; background: #e6e0d3; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px">
+<span class="mini">商品图</span><span style="color: #8a8479">→</span><span class="mini">场景 ×5</span><span style="color: #8a8479">→</span><span class="mini">尺寸适配</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 600">电商主图套图</span>
+<span style="font-size: 12px; color: #6b655d; line-height: 1.5">一张商品白底图，产出 5 张场景主图 + 3 种平台尺寸</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="chip">电商</span>
+<span style="font-size: 12px; color: #57534e; font-variant-numeric: tabular-nums">约 48 点 / 次</span>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; color: #1c1917">
+<div style="height: 92px; border-radius: 8px; background: #dde2e4; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px">
+<span class="mini">脚本</span><span style="color: #8a8479">→</span><span class="mini">分镜图</span><span style="color: #8a8479">→</span><span class="mini">图生视频</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 600">短视频分镜</span>
+<span style="font-size: 12px; color: #6b655d; line-height: 1.5">脚本拆成分镜，逐镜出图再图生视频，可串成 15 秒成片</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="chip">短视频</span>
+<span style="font-size: 12px; color: #57534e; font-variant-numeric: tabular-nums">约 160 点 / 次</span>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; color: #1c1917">
+<div style="height: 92px; border-radius: 8px; background: #e4dde1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px">
+<span class="mini">主题</span><span style="color: #8a8479">→</span><span class="mini">方向 ×4</span><span style="color: #8a8479">→</span><span class="mini">精修</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 600">品牌活动海报</span>
+<span style="font-size: 12px; color: #6b655d; line-height: 1.5">输入活动主题与卖点，按品牌规范生成 4 版海报方向</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="chip">品牌</span>
+<span style="font-size: 12px; color: #57534e; font-variant-numeric: tabular-nums">约 36 点 / 次</span>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; color: #1c1917">
+<div style="height: 92px; border-radius: 8px; background: #e3e2d6; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px">
+<span class="mini">卖点</span><span style="color: #8a8479">→</span><span class="mini">组图 ×5</span><span style="color: #8a8479">→</span><span class="mini">文案</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 600">小红书种草组图</span>
+<span style="font-size: 12px; color: #6b655d; line-height: 1.5">封面 + 4 张内页，统一色调，附带标题文案</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="chip">社媒</span>
+<span style="font-size: 12px; color: #57534e; font-variant-numeric: tabular-nums">约 42 点 / 次</span>
+</div>
+</a>
+
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">最近画布</h2>
+<div role="tablist" aria-label="筛选" style="display: flex; gap: 4px; font-size: 13px">
+<button type="button" role="tab" aria-selected="true" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: #e7e5df; font: inherit; font-size: 13px; color: #1c1917; font-weight: 600; cursor: pointer">全部</button>
+<button type="button" role="tab" aria-selected="false" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; font: inherit; font-size: 13px; color: #57534e; cursor: pointer">我创建的</button>
+<button type="button" role="tab" aria-selected="false" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; font: inherit; font-size: 13px; color: #57534e; cursor: pointer">团队共享</button>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px">
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #d9d1bf; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">禾野 · 秋季新品主图</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>电商主图套图 · 24 节点</span><span>12 分钟前</span>
+</div>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #c9d2d4; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">桂花乌龙 15s 广告</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>短视频分镜 · 31 节点</span><span>1 小时前</span>
+</div>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #d8cdd2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">双十一活动海报</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>品牌活动海报 · 12 节点</span><span>昨天</span>
+</div>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #d4d6c5; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">门店菜单改版探索</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>空白画布 · 40 节点</span><span>10 月 20 日</span>
+</div>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #dccfc4; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">小红书 10 月组图</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>种草组图 · 18 节点</span><span>10 月 18 日</span>
+</div>
+</div>
+</a>
+
+<a href="Canvas.dc.html" class="card" style="overflow: hidden; display: flex; flex-direction: column; color: #1c1917">
+<div style="height: 132px; background: #cdd0da; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px; box-sizing: border-box">
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.35)"></div>
+<div style="border-radius: 6px; background: rgba(255,255,255,.55)"></div>
+</div>
+<div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">包装插画风格测试</span>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b655d">
+<span>空白画布 · 9 节点</span><span>10 月 15 日</span>
+</div>
+</div>
+</a>
+
+</div>
+</div>
+</div>
+
+<aside style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 16px">
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-size: 15px; font-weight: 700">当前品牌套件</h2>
+<a href="Brand.dc.html" style="font-size: 12px; font-weight: 600">管理</a>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 48px; height: 48px; border-radius: 10px; background: #1f3b2d; color: #f1ead9; display: grid; place-items: center; font-weight: 700; font-size: 18px">禾</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600">禾野茶饮</span>
+<span style="font-size: 12px; color: #6b655d">新式茶饮 · 18 个产品 SKU</span>
+</div>
+</div>
+<div style="display: flex; gap: 6px">
+<div style="flex: 1; height: 28px; border-radius: 6px; background: #1f3b2d"></div>
+<div style="flex: 1; height: 28px; border-radius: 6px; background: #c7a46a"></div>
+<div style="flex: 1; height: 28px; border-radius: 6px; background: #f1ead9; border: 1px solid #e3dfd6"></div>
+<div style="flex: 1; height: 28px; border-radius: 6px; background: #8c3b2a"></div>
+</div>
+<p style="margin: 0; font-size: 12px; color: #6b655d; line-height: 1.6">生成时自动注入：品牌色、风格参考图 3 张、禁用词 6 条。</p>
+</div>
+
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-size: 15px; font-weight: 700">生成任务</h2>
+<span style="font-size: 12px; color: #6b655d">3 进行中</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eeebe4">
+<div style="width: 36px; height: 36px; border-radius: 8px; background: #d9d1bf; flex-shrink: 0"></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">场景主图 · 木桌晨光</span>
+<span style="font-size: 12px; color: #6b655d">gpt-image-2 · 4 张 · 16 点</span>
+</div>
+<span style="font-size: 12px; font-weight: 600; color: #2a49c9; white-space: nowrap">生成中 2/4</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eeebe4">
+<div style="width: 36px; height: 36px; border-radius: 8px; background: #c9d2d4; flex-shrink: 0"></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">分镜 03 → 视频</span>
+<span style="font-size: 12px; color: #6b655d">sora-2 · 5 秒 · 60 点</span>
+</div>
+<span style="font-size: 12px; font-weight: 600; color: #57534e; white-space: nowrap">排队中</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eeebe4">
+<div style="width: 36px; height: 36px; border-radius: 8px; background: #d8cdd2; flex-shrink: 0"></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">海报方向 B</span>
+<span style="font-size: 12px; color: #6b655d">gpt-image-2 · 1 张 · 4 点</span>
+</div>
+<span style="font-size: 12px; font-weight: 600; color: #2f6b3a; white-space: nowrap">已完成</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eeebe4">
+<div style="width: 36px; height: 36px; border-radius: 8px; background: #dccfc4; flex-shrink: 0"></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">分镜 05 → 视频</span>
+<span style="font-size: 12px; color: #6b655d">sora-2 · 5 秒 · 60 点</span>
+</div>
+<span style="font-size: 12px; font-weight: 600; color: #9a3412; white-space: nowrap">额度不足</span>
+</div>
+
+</div>
+</aside>
+</section>
+</main>
+</div>
+
+
+
+
+</body></html>

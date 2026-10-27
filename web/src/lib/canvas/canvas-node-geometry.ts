@@ -1,4 +1,5 @@
 import { CanvasNodeType, type CanvasConnection, type CanvasNodeData, type ConnectionHandle, type ViewportTransform } from "@/types/canvas";
+import { collectGroupDescendantIds } from "./canvas-group-members";
 
 export function nodeBounds(nodes: CanvasNodeData[]) {
     return nodes.reduce(
@@ -56,8 +57,8 @@ function selectedGroupIds(selectedIds: Set<string>, nodes: CanvasNodeData[]) {
 }
 
 export function collectGroupMemberNodes(selectedIds: Set<string>, nodes: CanvasNodeData[]) {
-    const groups = selectedGroupIds(selectedIds, nodes);
-    return nodes.filter((node) => node.type !== CanvasNodeType.Group && (selectedIds.has(node.id) || (node.metadata?.groupId != null && groups.has(node.metadata.groupId))));
+    const ids = collectGroupDescendantIds(selectedIds, nodes);
+    return nodes.filter((node) => node.type !== CanvasNodeType.Group && ids.has(node.id));
 }
 
 export function getGroupWrapRect(members: CanvasNodeData[]) {
@@ -82,7 +83,7 @@ export function canUngroupSelectedNodes(selectedIds: Set<string>, nodes: CanvasN
 }
 
 function emptyGroupIds(nodes: CanvasNodeData[], keepId?: string) {
-    const used = new Set(nodes.flatMap((node) => (node.type !== CanvasNodeType.Group && node.metadata?.groupId ? [node.metadata.groupId] : [])));
+    const used = new Set(nodes.flatMap((node) => node.metadata?.groupId ? [node.metadata.groupId] : []));
     return new Set(nodes.filter((node) => node.type === CanvasNodeType.Group && node.id !== keepId && !used.has(node.id)).map((node) => node.id));
 }
 

@@ -1,4 +1,7 @@
 .git
+.tools
+artifacts
+server/node_modules
 .idea
 docs2
 data

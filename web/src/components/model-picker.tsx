@@ -3,6 +3,7 @@ import { Cpu } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import i18n from "@/i18n";
+import { modelPriceRule, formatPriceHint } from "@/lib/platform-pricing";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
@@ -92,10 +93,12 @@ function emptyModelLabel(config: AiConfig, capability?: ModelCapability) {
 }
 
 function ModelLabel({ config, model }: { config: AiConfig; model: string }) {
+    const price = modelPriceRule(config, model);
     return (
         <span className="flex min-w-0 items-center gap-2">
             <ModelIcon model={model} />
             <span className="truncate">{modelOptionLabel(config, model)}</span>
+            {price ? <span className="shrink-0 text-[10px] opacity-60">{formatPriceHint(price)}</span> : null}
         </span>
     );
 }

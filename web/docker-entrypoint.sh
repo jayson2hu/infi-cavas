@@ -13,10 +13,17 @@ sanitize_id() {
 
 GA4_ID=$(sanitize_id "${ANALYTICS_GA4_ID:-}")
 BAIDU_ID=$(sanitize_id "${ANALYTICS_BAIDU_ID:-}")
+PLATFORM_BASE=$(printf '%s' "${PLATFORM_API_BASE:-}" | base64 | tr -d '\n')
+PRODUCT_NAME=$(printf '%s' "${BRAND_NAME:-}" | base64 | tr -d '\n')
 
 cat > /usr/share/nginx/html/config.js <<EOF
+(() => {
+const decode = (value) => new TextDecoder().decode(Uint8Array.from(atob(value), (char) => char.charCodeAt(0)));
 window.__RUNTIME_CONFIG__ = {
+  PLATFORM_API_BASE: decode("${PLATFORM_BASE}"),
+  BRAND_NAME: decode("${PRODUCT_NAME}"),
   ANALYTICS_GA4_ID: "${GA4_ID}",
   ANALYTICS_BAIDU_ID: "${BAIDU_ID}"
 };
+})();
 EOF

@@ -1,4 +1,7 @@
+import platform from "./platform-en-US";
+
 export default {
+    platform,
     meta: {
         title: "Infinite Canvas",
         description: "An infinite canvas creation tool",

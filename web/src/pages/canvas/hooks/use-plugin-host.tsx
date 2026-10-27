@@ -51,7 +51,7 @@ export function usePluginHost(params: PluginHostParams) {
         };
         return {
             generateImage: async (prompt, options) => {
-                const config = { ...buildGenerationConfig(effectiveConfig, undefined, "image"), count: String(options?.count || 1), ...(options?.model ? { model: options.model } : {}), ...(options?.size ? { size: options.size } : {}) };
+                const config = { ...buildGenerationConfig(effectiveConfig, undefined, "image"), platformContext: { ...effectiveConfig.platformContext, source: "plugin" as const }, ...(options?.count !== undefined ? { count: String(options.count) } : {}), ...(options?.model ? { model: options.model } : {}), ...(options?.size ? { size: options.size } : {}) };
                 ensureReady(config);
                 const references = toReferences(options?.references);
                 const items = references.length ? await requestEdit(config, prompt, references, { signal: options?.signal }) : await requestGeneration(config, prompt, { signal: options?.signal });
@@ -68,6 +68,7 @@ export function usePluginHost(params: PluginHostParams) {
             generateVideo: async (prompt, options) => {
                 const config = {
                     ...buildGenerationConfig(effectiveConfig, undefined, "video"),
+                    platformContext: { ...effectiveConfig.platformContext, source: "plugin" as const },
                     ...(options?.model ? { model: options.model } : {}),
                     ...(options?.size ? { size: options.size } : {}),
                     ...(options?.seconds ? { videoSeconds: options.seconds } : {}),
@@ -77,7 +78,7 @@ export function usePluginHost(params: PluginHostParams) {
                 return { url: file.url, mimeType: file.mimeType, width: file.width, height: file.height, durationMs: file.durationMs };
             },
             generateText: async (prompt, options) => {
-                const config = { ...buildGenerationConfig(effectiveConfig, undefined, "text"), ...(options?.model ? { model: options.model } : {}) };
+                const config = { ...buildGenerationConfig(effectiveConfig, undefined, "text"), platformContext: { ...effectiveConfig.platformContext, source: "plugin" as const }, ...(options?.model ? { model: options.model } : {}) };
                 ensureReady(config);
                 const messages: AiTextMessage[] = [...(options?.system ? [{ role: "system" as const, content: options.system }] : []), { role: "user" as const, content: prompt }];
                 const text = await requestImageQuestion(config, messages, (delta) => options?.onDelta?.(delta), { signal: options?.signal });

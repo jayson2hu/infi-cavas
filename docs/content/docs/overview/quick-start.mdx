@@ -7,6 +7,8 @@ description: Run Infinite Canvas in a few steps
 
 To try the project, deploy or start the `web/` frontend.
 
+For accounts, workspaces, billing, brands, and templates, use [Platform Deployment](/docs/overview/platform-deployment). The frontend-only instructions below keep BYOK and local canvas behavior. Run commands from this repository's source checkout; the upstream repository does not include this extension.
+
 ## Deploy with Vercel
 
 Import the repository into Vercel. The root `vercel.json` builds `web/`. AI requests are sent directly from the browser to your OpenAI-compatible endpoint, so no additional application server is required.
@@ -14,8 +16,7 @@ Import the repository into Vercel. The root `vercel.json` builds `web/`. AI requ
 ## Run locally
 
 ```bash
-git clone git@github.com:basketikun/infinite-canvas.git
-cd infinite-canvas/web
+cd web
 bun install
 bun run dev
 ```

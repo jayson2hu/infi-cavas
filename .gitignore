@@ -8,6 +8,13 @@ data/
 *.tsbuildinfo
 .DS_Store
 .idea
+.tools/
+artifacts/
+playwright-report/
+test-results/
+__pycache__/
+*.py[cod]
+/无限画布二开-开发交付包_1.zip
 web/dist
 
 **/dist

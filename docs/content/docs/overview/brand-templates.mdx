@@ -1,0 +1,36 @@
+---
+title: Brands and Templates
+description: Brand assets, generation rules, industry templates, and reusable team workflows
+---
+
+# Brands and Templates
+
+Brands and team templates belong to a server-side workspace. Canvases, canvas assets, and BYOK settings remain primarily in the browser. Signing in does not automatically synchronize canvases to the server.
+
+## Brand kits
+
+Use Brand Assets to manage logos, product SKUs, style references, colors, required and avoided terms, and generation defaults. PNG, JPEG, and WebP images up to 20MB are accepted. The server checks actual image bytes and stores immutable finalized assets. The injection preview updates about 300ms after edits.
+
+Owners/admins manage the default brand, enforcement, and editors. Assigned editors can change brand content but cannot change enforcement or delete default/enforced brands. Ordinary members can read and use brands. Select a brand in the canvas toolbar and toggle it per node; an enforced brand disables that toggle and is also enforced by the gateway.
+
+Platform generation injects text and appends enabled brand references within model limits, preserving user-reference priority and converting generation to image editing when necessary. BYOK injects text only and spends no platform credits. Explicit node parameters override brand defaults. Avoided terms are prompt instructions, not a guarantee about model output.
+
+Dragging an SKU into the canvas creates a normal local image node. The original image is included in canvas ZIP exports.
+
+## Run a template
+
+Choose an official or team template, review its steps, and fill text, select, and image variables. Images can be uploaded or selected from the current brand's SKUs. Insert into a new canvas or use the existing canvas sidebar. Insertion is undoable, costs no credits, and increments usage once.
+
+After confirming models and estimated cost, steps run in order with peers running concurrently. Downstream nodes use actual upstream results. Failure stops the current step; continuing skips completed nodes. Stopping cancels current requests and prevents downstream work. Running an already completed workflow again starts a new billable run. Video recovery queries existing tasks after reload without duplicating creation. A removed BYOK channel never silently falls back to paid platform generation.
+
+The six official workflows cover ecommerce main-image sets, long product-detail pages, short-video storyboards, campaign posters, social image sets, and store materials. Ecommerce creates five candidates on one node, then adapts its current primary image into three sizes: eight images, initially estimated at 40 credits. Other workflows retain their text, image, video, and speech steps and require working provider routes for those capabilities.
+
+## Save a team workflow
+
+Select nodes or groups and choose Save as team template; no selection uses the whole canvas. Set metadata, an optional cover, and input text/image variables. Nested groups and internal connections remain intact. Input images are uploaded to workspace storage. Historical generated outputs and local runtime state are cleared.
+
+Generation configurations and their historical results become reusable empty targets with effective model parameters and dependency-ordered steps. External references, cycles, or incomplete graphs are rejected. Saved templates appear under Team Templates and instantiate with fresh node IDs. Owners/admins and workspace brand editors can manage team templates; only platform administrators can modify official templates.
+
+## Verification scope
+
+All six workflows passed browser, PostgreSQL, and S3-protocol integration checks with a controlled upstream, including save/reuse, refunds, cancellation, and video recovery. Real-provider image generation, brand-reference editing, and the complete ecommerce template also passed: registration to eight images took 84.84 seconds, the acceptance workspace balance changed from 200 to 160, and all eight archived hashes matched provider output. That provider rejected the text model call; real video and speech remain unverified. Actual pixel sizes still differ from requests. These results do not establish production Docker deployment acceptance.

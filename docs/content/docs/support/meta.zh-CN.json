@@ -4,6 +4,7 @@
   "defaultOpen": true,
   "pages": [
     "security",
+    "platform-security",
     "sponsor"
   ]
 }

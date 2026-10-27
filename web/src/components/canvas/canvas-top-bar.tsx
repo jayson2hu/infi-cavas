@@ -8,6 +8,9 @@ import { canvasThemes } from "@/lib/canvas-theme";
 import { useCanvasSidePanelStore } from "@/stores/use-canvas-side-panel-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { DOCS_URL } from "@/constant/env";
+import { isPlatformEnabled } from "@/lib/platform";
+import { CreditsBadge } from "@/components/billing/credits-badge";
+import { BrandSelector } from "@/components/brand/brand-selector";
 
 export function CanvasTopBar({
     title,
@@ -26,6 +29,7 @@ export function CanvasTopBar({
     onExportProject,
     onImportImage,
     onOpenPlugins,
+    onSaveTemplate,
     onUndo,
     onRedo,
     agentOpen,
@@ -48,6 +52,7 @@ export function CanvasTopBar({
     onExportProject: () => void;
     onImportImage: () => void;
     onOpenPlugins: () => void;
+    onSaveTemplate?: () => void;
     onUndo: () => void;
     onRedo: () => void;
     agentOpen: boolean;
@@ -99,6 +104,7 @@ export function CanvasTopBar({
                                 { type: "divider" },
                                 { key: "import", icon: <Upload className="size-4" />, label: t("canvas.importAsset"), onClick: onImportImage },
                                 { key: "export", icon: <Download className="size-4" />, label: t("canvas.exportCurrent"), onClick: onExportProject },
+                                ...(onSaveTemplate ? [{ key: "template", icon: <BookOpen className="size-4" />, label: t("platform.templateSave"), onClick: onSaveTemplate }] : []),
                                 { type: "divider" },
                                 { key: "undo", disabled: !canUndo, icon: <Undo2 className="size-4" />, label: <MenuLabel text={t("canvas.undo")} shortcut="⌘ Z" />, onClick: onUndo },
                                 { key: "redo", disabled: !canRedo, icon: <Redo2 className="size-4" />, label: <MenuLabel text={t("canvas.redo")} shortcut="⌘ ⇧ Z / ⌘ Y" />, onClick: onRedo },
@@ -139,6 +145,8 @@ export function CanvasTopBar({
                 </div>
 
                 <div className="pointer-events-auto flex items-center gap-1.5">
+                    {isPlatformEnabled() ? <BrandSelector compact /> : null}
+                    {isPlatformEnabled() ? <CreditsBadge /> : null}
                     <UserStatusActions variant="canvas" onOpenShortcuts={() => setShortcutsOpen(true)} onOpenPlugins={onOpenPlugins} />
                     <span className="h-6 w-px" style={{ background: theme.toolbar.border }} />
                     <Button

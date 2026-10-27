@@ -1,0 +1,39 @@
+---
+title: Platform Billing
+description: Credits, holds, settlement, refunds, member caps, and BYOK
+---
+
+# Platform Billing
+
+Platform requests use the current workspace's credits. BYOK channels call the provider directly from the browser and do not spend platform credits. Browsing, inserting, or saving templates is free; generation creates billable jobs. Providers charge their own accounts separately.
+
+## Job lifecycle
+
+The gateway checks permissions, available balance, and ordinary members' monthly caps before calling the provider. A rejected request returns 402 without creating a job or contacting the provider. Accepted requests hold an estimate; successful requests settle actual usage and return unused credits. Additional charges use only available credits and never create a negative balance; uncovered differences are recorded on the job.
+
+Failed or canceled unsettled jobs refund their hold. Settlement and refunds are idempotent. Refunds return to the original bucket; an expired bucket also creates an expiration transaction instead of restoring spendable credits. Canvas image batches use separate single-image requests, so successful images remain charged if another image fails. Stopping a template prevents downstream steps. Stopping browser polling does not cancel an already accepted provider video task; the server still checks its terminal state.
+
+## Editable initial prices
+
+| Capability | Initial rule | Basis |
+| --- | --- | --- |
+| Image | 4 credits at a requested longest edge up to 1536 px or auto; 8 above it | Requested size tier and returned image count |
+| Video | 12 credits per second | Requested duration |
+| Text | 0.5 per 1K input tokens and 2 per 1K output tokens; hold 10, minimum 1 | Final SSE usage, or the estimate when usage is absent |
+| Speech | 2 credits per 1K characters | Unicode characters in the spoken input |
+
+Each request rounds upward to whole credits. Current administrator pricing is authoritative. Brand references do not add billed image count, and speech instructions are not added to spoken input. Template card estimates are saved with the template; detail and run confirmation use current model configuration. Final job records determine actual charges.
+
+Providers determine output pixels. The gateway preserves original outputs and prices the requested tier. Real template requests for 1024×1024 returned 1374×1145 or 1254×1254; 1088×1920 returned 941×1672; 1248×1664 returned 1086×1448. Exact output dimensions are not guaranteed by the request alone.
+
+## Grants, plans, and access
+
+`SIGNUP_BONUS_CREDITS` controls the registration gift. Platform administrators can grant credits, issue redemption codes, and configure monthly plans. Online payment is not implemented. A workspace cannot redeem the same code twice; global use limits and expiry also apply.
+
+Subscription credits are consumed first, followed by other eligible buckets ordered by expiry and creation. Monthly renewal expires the old subscription balance and creates the next bucket. Period maintenance runs hourly; job and object cleanup run every five minutes under the defined timeout rules.
+
+Ordinary members' settled and held usage counts toward their monthly cap. Owners and admins are exempt from that personal cap, but still need workspace balance. Members see their own jobs; workspace member usage and full transactions require owner/admin access. Being a platform administrator does not grant membership in other workspaces.
+
+With `BILLING_ENABLED=false`, jobs and usage remain available while generation spends no platform credits. The page shows “Usage statistics.” Each job retains the billing mode captured at submission, even if configuration changes later. Text streams refresh the balance at completion; video recovery queries the existing task after a page reload.
+
+See [Platform Deployment](/docs/overview/platform-deployment) and [Brands and Templates](/docs/overview/brand-templates).

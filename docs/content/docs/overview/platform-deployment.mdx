@@ -1,0 +1,72 @@
+---
+title: Platform Deployment
+description: Deploy Web, Bun, PostgreSQL, and MinIO and configure working provider routes
+---
+
+# Platform Deployment
+
+The main `docker-compose.yml` builds this checkout's Web and Bun services with PostgreSQL 16, MinIO, and a one-shot bucket initializer. For frontend-only BYOK use `docker-compose.web-only.yml` or the original `docker-compose.local.yml`.
+
+Local acceptance uses real PostgreSQL, S3-protocol storage, and browser integration. The acceptance machine has no usable Docker/WSL and its environment blocked HTTP listener startup. A clean-machine Compose deployment is therefore still unverified. These are deployment instructions, not a claim of completed Docker/MinIO acceptance; see the repository's `docs/development/` evidence.
+
+## Configure and start
+
+Install Docker Engine and Compose v2. From this extension's source checkout:
+
+```bash
+cp .env.example .env
+```
+
+PowerShell users can run `Copy-Item .env.example .env`. Fill the required values before starting. Compose rejects empty required secrets.
+
+| Variable | Value |
+| --- | --- |
+| `POSTGRES_PASSWORD` | A unique strong random database password |
+| `DATABASE_URL` | `postgres://ic:encoded-password@postgres:5432/ic`, matching configured user/database |
+| `APP_SECRET` | A separate strong random secret of at least 32 characters; back it up |
+| `S3_ACCESS_KEY` | A separate storage identifier, such as 20 random hex characters |
+| `S3_SECRET_KEY` | A separate strong random storage password |
+| `ADMIN_EMAILS` | Registration email addresses allowed to become platform administrators, comma-separated |
+
+Use a local cryptographic password generator; Bun's `crypto.randomBytes(32).toString('hex')` can generate passwords and APP_SECRET, and 10 bytes can generate the access identifier. URL-encode special characters in DATABASE_URL, while POSTGRES_PASSWORD retains the unencoded value. Do not reuse secrets or commit the resulting environment file.
+
+Defaults are `APP_ORIGIN=http://localhost:3000`, Web bound to `127.0.0.1:3000`, and `S3_PUBLIC_ENDPOINT=http://localhost:9000`. The actual browser origin must match APP_ORIGIN exactly. Change public URLs when changing ports. Use separate databases/buckets per environment and a consistent explicit DATABASE_URL across instances of one database.
+
+```bash
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+```
+
+Use `config --quiet` to avoid printing expanded secrets. Startup waits for database/storage health and bucket initialization, then runs mutually exclusive migrations, idempotent seeds, and storage/CORS setup before the backend listens and Web becomes available. Repeated startup preserves operator changes to models, pricing, templates, and usage counts.
+
+Open `http://localhost:3000` and register an address listed in ADMIN_EMAILS. There is no default login or provider key. In platform management add a provider, test connectivity, configure model routes, and verify pricing. A model listing alone does not prove the generation endpoint works. Validate required image, text, video, and speech capabilities separately.
+
+Then open the ecommerce template from Home, supply a product image and variables, run it, and compare output, balance, and ledger. Initial seeds contain model definitions and six complete workflows; they do not provision provider capabilities.
+
+## HTTPS and proxy boundaries
+
+Web and MinIO ports bind to loopback by default. PostgreSQL and Bun do not publish host ports, and the MinIO console is not exposed. A managed TLS frontend can proxy port 3000, with a separate HTTPS storage hostname proxying port 9000. Set the real HTTPS APP_ORIGIN and S3_PUBLIC_ENDPOINT.
+
+Signed browser PUT/GET URLs must use a reachable endpoint with the exact signed Host. Never use the internal `http://minio:9000` address as the public endpoint. Storage proxies must preserve the correct Host, path, and signed query parameters. HTTPS pages require HTTPS storage. Initialization configures CORS for the current application origin and GET/PUT/HEAD plus required signing headers.
+
+Application nginx proxies `/api/` to internal `server:8787`, disables request/response buffering, sets 900-second read/write timeouts, and accepts bodies up to 100MB. It overwrites client IP headers before the internal backend trusts them. Never expose that proxy-trusting backend directly.
+
+With multiple proxy layers, nginx initially sees the previous proxy's IP. To use real client IPs for rate limiting, configure real-IP parsing only for explicitly trusted upstream proxy addresses, or terminate TLS at the application nginx. Do not trust forwarded IP headers from arbitrary public clients.
+
+## Runtime options and operations
+
+Platform Web uses `PLATFORM_API_BASE=/api`; leaving it empty selects frontend-only behavior. `BRAND_NAME` sets a product label without removing upstream attribution. Billing defaults on; `BILLING_ENABLED=false` keeps usage/jobs without spending credits. Registration defaults on with a 200-credit gift through `ALLOW_SIGNUP` and `SIGNUP_BONUS_CREDITS`. `MODERATION_BLOCKLIST` is separate from brand prompt rules. Analytics IDs default empty.
+
+Apply environment changes with `docker compose up -d --force-recreate`. Manage providers, models, pricing, and templates through the admin interface; seeds preserve operator edits. Back up PostgreSQL, S3 objects, and APP_SECRET, and test restoration separately. Browser-local canvases need their own export/WebDAV backups. Do not delete persistent volumes as an upgrade step or rotate APP_SECRET without migrating existing encrypted provider keys.
+
+```bash
+docker compose logs --tail=100 server bucket-init
+docker compose logs --tail=100 web minio postgres
+```
+
+Check database addresses and credentials for bootstrap failures; APP_ORIGIN and permissions for 403s; public storage Host/CORS and actual file format for uploads; model routes and upstream endpoints for generation failures. Redact secrets and signed URLs before sharing logs.
+
+A clean-machine acceptance must cover registration-to-real-template-output, balances/ledger/refunds, 402 without upstream calls, member caps, enforced brands, video reload recovery, BYOK, frontend-only and billing-disabled modes, and 390px layouts. Keep controlled upstream, S3-protocol substitute, real provider, and actual Docker/MinIO evidence separate.
+
+See [Billing](/docs/overview/platform-billing), [Brands and Templates](/docs/overview/brand-templates), and [Security Boundaries](/docs/support/platform-security).

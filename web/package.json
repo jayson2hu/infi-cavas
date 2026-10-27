@@ -25,6 +25,7 @@
         "clsx": "^2.1.1",
         "copy-to-clipboard": "^4.0.2",
         "dayjs": "^1.11.20",
+        "decimal.js": "10.6.0",
         "fflate": "^0.8.3",
         "file-saver": "^2.0.5",
         "i18next": "^26.3.6",

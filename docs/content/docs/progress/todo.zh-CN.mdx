@@ -7,5 +7,16 @@ description: 当前项目后续值得处理的事项
 
 本文档用来记录当前项目后续比较值得处理的事项。
 
+## 平台二次开发
+
+本次按用户确认范围完成代码与本机验收；以下部署、真实多模态及文档运行验证保留为后续工作。
+
+- M0–M5开发与本机验收已完成，真实电商模板8图84.84秒通过；进度见仓库 `docs/development/progress.md`。
+- 在具备Docker/MinIO和允许HTTP监听的环境完成干净机器部署验收；本机无监听浏览器测试不能替代它。
+- 补齐真实文本、视频和语音供应商能力验证；已配置图片供应商的输出尺寸差异保留为已知问题。
+- 文档Windows standalone缓存问题需在合适环境补打包/运行验证；MDX与类型检查已通过。
+
+## 上游待办
+
 - 本地 Agent 接入后续：按[本地 Agent 接入规划](/zh-CN/docs/progress/local-agent-integration-plan)把 Claude Code CLI Adapter 升级为 Claude Agent SDK Adapter，并完善工具队列体验。
 - Agent Skill 后续：补充网络检索安装、Skill 资源文件管理和可控的本地记忆沉淀。

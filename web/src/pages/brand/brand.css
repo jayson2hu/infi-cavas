@@ -1,0 +1,13 @@
+.brand-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+.brand-library-card { display: block; color: var(--workspace-text); transition: border-color 160ms ease; }
+.brand-library-card:hover { border-color: var(--workspace-border-strong); }
+.brand-overview-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; }
+.brand-identity-grid, .brand-rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.brand-asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px; }
+.brand-asset-grid.brand-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.brand-asset-image { height: 132px; overflow: hidden; border: 1px solid var(--workspace-border); border-radius: 10px; background: var(--workspace-input); }
+.brand-asset-image.is-attached { outline: 2px solid var(--workspace-text); outline-offset: 2px; }
+.brand-asset-image .ant-image { height: 100%; display: flex; align-items: center; justify-content: center; }
+.brand-injection { overflow-wrap: anywhere; white-space: pre-wrap; padding: 14px; border-radius: 8px; background: var(--workspace-subtle); color: var(--workspace-secondary); font-size: 12px; line-height: 1.8; }
+@media (max-width: 1250px) { .brand-overview-grid { grid-template-columns: minmax(0, 1fr); } .brand-overview-grid > aside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; } .brand-overview-grid > aside > * { margin: 0; } }
+@media (max-width: 700px) { .brand-identity-grid, .brand-rules-grid, .brand-overview-grid > aside { grid-template-columns: minmax(0, 1fr); } .brand-asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

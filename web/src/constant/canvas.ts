@@ -2,6 +2,7 @@ import i18n from "@/i18n";
 import { CanvasNodeType } from "@/types/canvas";
 import type { CanvasNodeMetadata } from "@/types/canvas";
 import { getNodeSpec as getRegistryNodeSpec } from "@/lib/canvas/node-registry";
+import { CANVAS_NODE_DIMENSIONS } from "./canvas-dimensions";
 
 type CanvasNodeSpec = {
     width: number;
@@ -11,12 +12,12 @@ type CanvasNodeSpec = {
 };
 
 export const NODE_DEFAULT_SIZE = {
-    [CanvasNodeType.Image]: { width: 340, height: 240, get title() { return i18n.t("canvas.nodeTypes.image"); } },
-    [CanvasNodeType.Text]: { width: 340, height: 240, get title() { return i18n.t("canvas.nodeTypes.text"); } },
-    [CanvasNodeType.Config]: { width: 340, height: 240, get title() { return i18n.t("canvas.nodeTypes.config"); } },
-    [CanvasNodeType.Video]: { width: 420, height: 236, get title() { return i18n.t("canvas.nodeTypes.video"); } },
-    [CanvasNodeType.Audio]: { width: 340, height: 120, get title() { return i18n.t("canvas.nodeTypes.audio"); } },
-    [CanvasNodeType.Group]: { width: 760, height: 480, get title() { return i18n.t("canvas.nodeTypes.group"); } },
+    [CanvasNodeType.Image]: { ...CANVAS_NODE_DIMENSIONS.image, get title() { return i18n.t("canvas.nodeTypes.image"); } },
+    [CanvasNodeType.Text]: { ...CANVAS_NODE_DIMENSIONS.text, get title() { return i18n.t("canvas.nodeTypes.text"); } },
+    [CanvasNodeType.Config]: { ...CANVAS_NODE_DIMENSIONS.config, get title() { return i18n.t("canvas.nodeTypes.config"); } },
+    [CanvasNodeType.Video]: { ...CANVAS_NODE_DIMENSIONS.video, get title() { return i18n.t("canvas.nodeTypes.video"); } },
+    [CanvasNodeType.Audio]: { ...CANVAS_NODE_DIMENSIONS.audio, get title() { return i18n.t("canvas.nodeTypes.audio"); } },
+    [CanvasNodeType.Group]: { ...CANVAS_NODE_DIMENSIONS.group, get title() { return i18n.t("canvas.nodeTypes.group"); } },
 } satisfies Record<CanvasNodeType, { width: number; height: number; title: string }>;
 
 export const NODE_SPECS = {

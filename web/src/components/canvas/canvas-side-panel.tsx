@@ -20,11 +20,15 @@ import { useThemeStore } from "@/stores/use-theme-store";
 import { CanvasNodeType, type CanvasNodeData } from "@/types/canvas";
 
 import type { InsertAssetPayload } from "./asset-picker-modal";
+import { isPlatformEnabled } from "@/lib/platform";
+import { CanvasBrandTab } from "@/components/brand/canvas-brand-tab";
+import { TemplateLibrary } from "@/components/templates/template-library";
+import type { TemplateInsertion } from "@/services/api/platform/templates";
 
 const PANEL_MOTION_SECONDS = CANVAS_SIDE_PANEL_MOTION_MS / 1000;
 const PANEL_EASE = [0.22, 1, 0.36, 1] as const;
 
-type PanelTab = "canvas" | "assets" | "prompts";
+type PanelTab = "canvas" | "assets" | "prompts" | "brand" | "templates";
 
 type Props = {
     nodes: CanvasNodeData[];
@@ -33,6 +37,7 @@ type Props = {
     onPreviewNode: (nodeId: string) => void;
     onHoverNode: (nodeId: string | null) => void;
     onInsertAsset: (payload: InsertAssetPayload) => void;
+    onInsertTemplate?: (input: TemplateInsertion) => Promise<void> | void;
 };
 
 const NODE_TYPE_ICON: Record<string, typeof Square> = {
@@ -51,7 +56,7 @@ const STATUS_COLOR: Record<string, string> = {
     idle: "transparent",
 };
 
-export function CanvasSidePanel({ nodes, selectedNodeIds, onFocusNode, onPreviewNode, onHoverNode, onInsertAsset }: Props) {
+export function CanvasSidePanel({ nodes, selectedNodeIds, onFocusNode, onPreviewNode, onHoverNode, onInsertAsset, onInsertTemplate }: Props) {
     const { t } = useTranslation();
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const [tab, setTab] = useState<PanelTab>("canvas");
@@ -100,17 +105,19 @@ export function CanvasSidePanel({ nodes, selectedNodeIds, onFocusNode, onPreview
                 style={{ width, background: theme.toolbar.panel, borderColor: theme.toolbar.border, color: theme.node.text }}
                 data-canvas-no-zoom
             >
-                <div className="flex items-center gap-5 px-4 pt-3.5">
+                <div className="flex items-center gap-4 overflow-x-auto px-4 pt-3.5">
                     <TabButton label={t("canvas.sidePanel.canvas")} active={tab === "canvas"} theme={theme} onClick={() => setTab("canvas")} />
                     <TabButton label={t("canvas.sidePanel.assets")} active={tab === "assets"} theme={theme} onClick={() => setTab("assets")} />
                     <TabButton label={t("canvas.sidePanel.prompts")} active={tab === "prompts"} theme={theme} onClick={() => setTab("prompts")} />
+                    {isPlatformEnabled() ? <TabButton label={t("platform.brandKit")} active={tab === "brand"} theme={theme} onClick={() => setTab("brand")} /> : null}
+                    {isPlatformEnabled() ? <TabButton label={t("platform.templateCenter")} active={tab === "templates"} theme={theme} onClick={() => setTab("templates")} /> : null}
                 </div>
                 <div className="mt-2 min-h-0 flex-1 overflow-hidden">
                     {tab === "canvas" ? (
                         <CanvasNodesTab nodes={nodes} selectedNodeIds={selectedNodeIds} onFocusNode={onFocusNode} onPreviewNode={onPreviewNode} onHoverNode={onHoverNode} theme={theme} />
                     ) : tab === "assets" ? (
                         <CanvasAssetsTab onInsert={onInsertAsset} theme={theme} />
-                    ) : (
+                    ) : tab === "brand" ? <CanvasBrandTab onInsert={onInsertAsset} /> : tab === "templates" ? <TemplateLibrary compact onInsert={onInsertTemplate} /> : (
                         <CanvasPromptsTab onInsert={onInsertAsset} theme={theme} />
                     )}
                 </div>
@@ -122,7 +129,7 @@ export function CanvasSidePanel({ nodes, selectedNodeIds, onFocusNode, onPreview
 
 function TabButton({ label, active, theme, onClick }: { label: string; active: boolean; theme: CanvasTheme; onClick: () => void }) {
     return (
-        <button type="button" onClick={onClick} className="relative pb-1.5 text-sm font-semibold transition-opacity" style={{ color: theme.node.text, opacity: active ? 1 : 0.45 }}>
+        <button type="button" onClick={onClick} className="relative shrink-0 whitespace-nowrap pb-1.5 text-sm font-semibold transition-opacity" style={{ color: theme.node.text, opacity: active ? 1 : 0.45 }}>
             {label}
             {active ? <motion.span layoutId="sidePanelTabIndicator" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full" style={{ background: theme.toolbar.activeText }} transition={{ type: "spring", stiffness: 500, damping: 34 }} /> : null}
         </button>
@@ -161,17 +168,18 @@ function CanvasNodesTab({ nodes, selectedNodeIds, onFocusNode, onPreviewNode, on
         const filteredIds = new Set(filtered.map((node) => node.id));
         const groups = new Set(nodes.filter((node) => node.type === CanvasNodeType.Group).map((node) => node.id));
         const children = new Map<string, CanvasNodeData[]>();
-        filtered.forEach((node) => {
+        nodes.forEach((node) => {
             const groupId = node.metadata?.groupId;
             if (groupId && groups.has(groupId)) children.set(groupId, [...(children.get(groupId) || []), node]);
         });
-        return nodes.flatMap((node) => {
-            if (node.metadata?.groupId && groups.has(node.metadata.groupId)) return [];
-            if (node.type !== CanvasNodeType.Group) return filteredIds.has(node.id) ? [{ node, depth: 0, hasChildren: false }] : [];
-            const groupChildren = children.get(node.id) || [];
-            if (!filteredIds.has(node.id) && !groupChildren.length) return [];
-            return [{ node, depth: 0, hasChildren: groupChildren.length > 0 }, ...(collapsedGroups.has(node.id) ? [] : groupChildren.map((child) => ({ node: child, depth: 1, hasChildren: false })))];
-        });
+        type Row = { node: CanvasNodeData; depth: number; hasChildren: boolean };
+        const visit = (node: CanvasNodeData, depth: number, ancestors: Set<string>): Row[] => {
+            if (ancestors.has(node.id)) return [];
+            const childRows = (children.get(node.id) || []).flatMap((child) => visit(child, depth + 1, new Set([...ancestors, node.id])));
+            if (!filteredIds.has(node.id) && !childRows.length) return [];
+            return [{ node, depth, hasChildren: childRows.length > 0 }, ...(collapsedGroups.has(node.id) ? [] : childRows)];
+        };
+        return nodes.filter((node) => !node.metadata?.groupId || !groups.has(node.metadata.groupId)).flatMap((node) => visit(node, 0, new Set()));
     }, [collapsedGroups, filtered, nodes]);
 
     const exitSelect = () => {
@@ -304,8 +312,8 @@ function CanvasNodesTab({ nodes, selectedNodeIds, onFocusNode, onPreviewNode, on
                                 <div
                                     key={node.id}
                                     data-node-item
-                                    className={cn("group relative flex items-center rounded-lg transition", depth && "ml-5", active ? "" : "hover:bg-black/5 dark:hover:bg-white/5")}
-                                    style={active ? { background: theme.toolbar.activeBg } : undefined}
+                                    className={cn("group relative flex items-center rounded-lg transition", active ? "" : "hover:bg-black/5 dark:hover:bg-white/5")}
+                                    style={{ marginLeft: depth * 20, ...(active ? { background: theme.toolbar.activeBg } : {}) }}
                                     onMouseEnter={() => onHoverNode(node.id)}
                                     onMouseLeave={(event) => {
                                         const to = event.relatedTarget as Element | null;

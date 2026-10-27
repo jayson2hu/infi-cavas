@@ -1,0 +1,42 @@
+{
+  "_comment": "官方模板示例：电商主图套图。templates 行字段 + body。生成步骤使用『空 image 节点』作为生成目标：handleGenerateNode 对空 image 节点会原地写回结果（project.tsx 中 isEmptyImageNode / reuseImageNode 分支），因此下游连线可以在模板里预先定义。上游 text 节点内容与 image 节点会通过 buildNodeGenerationContext 自动作为提示词补充与参考图。实现时请在真实画布上验证该行为。",
+  "id": "tpl_ecom_main_set",
+  "workspace_id": null,
+  "name": "电商主图套图",
+  "category": "ecommerce",
+  "description": "一张商品白底图，产出 5 张场景主图 + 3 种平台尺寸",
+  "preview_nodes": ["商品图", "场景 ×5", "尺寸适配"],
+  "body": {
+    "version": 1,
+    "variables": [
+      { "key": "product", "label": "商品图", "type": "image", "required": true, "bindNode": "product", "allowBrandSku": true, "placeholder": "拖入白底图，或从品牌 SKU 选择" },
+      { "key": "sellingPoints", "label": "核心卖点", "type": "text", "required": true, "placeholder": "例如：桂花乌龙 · 0 糖 0 卡 · 秋季限定" },
+      { "key": "scene", "label": "场景风格", "type": "select", "required": true, "options": ["木质桌面 · 清晨侧光", "大理石台面 · 柔和顶光", "户外野餐 · 午后阳光", "纯色背景 · 棚拍质感"], "default": "木质桌面 · 清晨侧光" }
+    ],
+    "ops": [
+      { "type": "add_node", "id": "product", "nodeType": "image", "title": "商品白底图", "x": 0, "y": 0, "width": 240, "height": 240, "metadata": {} },
+      { "type": "add_node", "id": "points", "nodeType": "text", "title": "卖点", "x": 0, "y": 320, "width": 240, "height": 140, "metadata": { "content": "{{var.sellingPoints}}" } },
+
+      { "type": "add_node", "id": "scene", "nodeType": "image", "title": "场景主图", "x": 380, "y": 100, "width": 280, "height": 280,
+        "metadata": { "generationMode": "image", "prompt": "以参考图中的商品为唯一主体，保持包装、文字与颜色完全不变，置于{{var.scene}}的场景中，电商主图构图，主体居中占画面 60%，背景简洁有质感，突出以下卖点的氛围。", "size": "1:1", "quality": "high", "count": 5 } },
+
+      { "type": "add_node", "id": "size_tb", "nodeType": "image", "title": "淘宝 1:1", "x": 760, "y": -60, "width": 220, "height": 220,
+        "metadata": { "generationMode": "image", "prompt": "保持画面主体与风格不变，输出 1:1 方图，主体完整不裁切，四周留出适当留白。", "size": "1024x1024", "count": 1 } },
+      { "type": "add_node", "id": "size_dy", "nodeType": "image", "title": "抖音 9:16", "x": 760, "y": 200, "width": 160, "height": 284,
+        "metadata": { "generationMode": "image", "prompt": "保持画面主体与风格不变，向上下自然扩展为 9:16 竖版构图，上方预留标题空间。", "size": "1088x1920", "count": 1 } },
+      { "type": "add_node", "id": "size_xhs", "nodeType": "image", "title": "小红书 3:4", "x": 760, "y": 530, "width": 210, "height": 280,
+        "metadata": { "generationMode": "image", "prompt": "保持画面主体与风格不变，扩展为 3:4 竖版构图，画面温暖有生活感。", "size": "1248x1664", "count": 1 } },
+
+      { "type": "connect_nodes", "fromNodeId": "product", "toNodeId": "scene" },
+      { "type": "connect_nodes", "fromNodeId": "points", "toNodeId": "scene" },
+      { "type": "connect_nodes", "fromNodeId": "scene", "toNodeId": "size_tb" },
+      { "type": "connect_nodes", "fromNodeId": "scene", "toNodeId": "size_dy" },
+      { "type": "connect_nodes", "fromNodeId": "scene", "toNodeId": "size_xhs" }
+    ],
+    "steps": [
+      { "label": "场景主图 × 5", "nodeIds": ["scene"], "mode": "image", "estimate": 20 },
+      { "label": "三平台尺寸适配", "nodeIds": ["size_tb", "size_dy", "size_xhs"], "mode": "image", "estimate": 20 }
+    ]
+  },
+  "estimate_credits": 40
+}
