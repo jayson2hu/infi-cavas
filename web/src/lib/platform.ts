@@ -1,4 +1,4 @@
-import { PLATFORM_API_BASE } from "@/constant/runtime-config";
+import { ALLOW_BYOK, PLATFORM_API_BASE } from "@/constant/runtime-config";
 import type { AiConfig } from "@/stores/use-config-store";
 import { useSessionStore } from "@/stores/use-session-store";
 import i18n from "@/i18n";
@@ -6,6 +6,8 @@ import { effectiveBrand } from "@/lib/platform-brand";
 
 export const PLATFORM_CHANNEL_ID = "platform";
 export function isPlatformEnabled() { return Boolean(PLATFORM_API_BASE); }
+/** 平台模式下模型 Key 由管理后台统一管理；只有显式开启 ALLOW_BYOK（私有化部署）时用户才能自带 Key。纯前端模式始终可用。 */
+export function isByokAllowed() { return !isPlatformEnabled() || ALLOW_BYOK; }
 
 export function isPlatformGatewayUrl(value: string) {
     if (!isPlatformEnabled()) return false;

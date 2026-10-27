@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 
 import i18n from "@/i18n";
 import { PLATFORM_API_BASE } from "@/constant/runtime-config";
-import { isPlatformEnabled, isPlatformGatewayUrl, PLATFORM_CHANNEL_ID } from "@/lib/platform";
+import { isByokAllowed, isPlatformEnabled, isPlatformGatewayUrl, PLATFORM_CHANNEL_ID } from "@/lib/platform";
 import type { PlatformModel, PriceRule } from "@/services/api/platform/types";
 import { useSessionStore } from "@/stores/use-session-store";
 import { useBrandStore } from "@/stores/use-brand-store";
@@ -141,6 +141,12 @@ export const defaultConfig: AiConfig = {
     autoFocusOnSelect: false,
 };
 
+// 关闭自带 Key 时默认配置只保留平台渠道。
+if (!isByokAllowed()) {
+    defaultConfig.channels = defaultConfig.channels.filter((channel) => channel.id === PLATFORM_CHANNEL_ID);
+    defaultConfig.models = defaultConfig.models.filter((model) => model.startsWith(`${PLATFORM_CHANNEL_ID}::`));
+}
+
 export const defaultWebdavSyncConfig: WebdavSyncConfig = {
     url: "",
     username: "",
@@ -234,11 +240,12 @@ export const useConfigStore = create<ConfigStore>()(
             setPlatformModels: (models) => {
                 if (!isPlatformEnabled()) return;
                 set((state) => {
-                    const channels = [createPlatformChannel(models), ...state.config.channels.filter((channel) => channel.id !== PLATFORM_CHANNEL_ID)];
+                    const channels = [createPlatformChannel(models), ...(isByokAllowed() ? state.config.channels.filter((channel) => channel.id !== PLATFORM_CHANNEL_ID) : [])];
                     const choose = (value: string, capability: ModelCapability) => {
                         const first = models.find((model) => model.capability === capability);
                         const unconfiguredDefault = value.startsWith("default::") && !channels.find((channel) => channel.id === "default")?.apiKey.trim();
-                        return first && (!value || unconfiguredDefault) ? encodeChannelModel(PLATFORM_CHANNEL_ID, first.id) : value;
+                        const byokSelection = !isByokAllowed() && !value.startsWith(`${PLATFORM_CHANNEL_ID}::`);
+                        return first && (!value || unconfiguredDefault || byokSelection) ? encodeChannelModel(PLATFORM_CHANNEL_ID, first.id) : value;
                     };
                     return { config: { ...state.config, channels, models: modelOptionsFromChannels(channels), model: choose(state.config.model, "image"), imageModel: choose(state.config.imageModel, "image"), videoModel: choose(state.config.videoModel, "video"), textModel: choose(state.config.textModel, "text"), audioModel: choose(state.config.audioModel, "audio") } };
                 });
@@ -254,11 +261,12 @@ export const useConfigStore = create<ConfigStore>()(
                 set((state) => ({
                     config: {
                         ...state.config,
-                        [key]: key === "channels" && isPlatformEnabled() ? [state.config.channels.find((channel) => channel.id === PLATFORM_CHANNEL_ID) || createPlatformChannel(), ...(value as ModelChannel[]).filter((channel) => channel.id !== PLATFORM_CHANNEL_ID)] : value,
+                        [key]: key === "channels" && isPlatformEnabled() ? [state.config.channels.find((channel) => channel.id === PLATFORM_CHANNEL_ID) || createPlatformChannel(), ...(isByokAllowed() ? (value as ModelChannel[]).filter((channel) => channel.id !== PLATFORM_CHANNEL_ID) : [])] : value,
                     },
                 }));
             },
             importChannelCredentials: (input) => {
+                if (!isByokAllowed()) return { status: "invalid-base-url" as const }; // 平台统一管理 Key，不接受用户导入渠道
                 const currentConfig = get().config;
                 const result = upsertChannelCredentials(currentConfig, input);
                 if (result.config !== currentConfig) set({ config: result.config });
@@ -515,7 +523,8 @@ function normalizeChannels(config: AiConfig) {
             }),
         );
     }
-    return isPlatformEnabled() ? [createPlatformChannel(), ...channels] : channels;
+    if (!isPlatformEnabled()) return channels;
+    return isByokAllowed() ? [createPlatformChannel(), ...channels] : [createPlatformChannel()];
 }
 
 export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {

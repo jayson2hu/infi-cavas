@@ -5,7 +5,7 @@ import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig 
 // A separate process gives runtime-config its real platform-enabled startup state.
 if (!process.env.IC_PLATFORM_TEST_PROCESS) {
     test("platform gateway and billing isolated regression suite", () => {
-        const result = spawnSync(process.execPath, ["test", import.meta.filename], { encoding: "utf8", env: { ...process.env, IC_PLATFORM_TEST_PROCESS: "1", VITE_PLATFORM_API_BASE: "/api" } });
+        const result = spawnSync(process.execPath, ["test", import.meta.filename], { encoding: "utf8", env: { ...process.env, IC_PLATFORM_TEST_PROCESS: "1", VITE_PLATFORM_API_BASE: "/api", VITE_ALLOW_BYOK: "true" } }); // 私有化部署：开启自带 Key 的回归
         if (result.status !== 0) throw new Error(result.stdout + result.stderr);
         expect(result.status).toBe(0);
     }, 60000);
