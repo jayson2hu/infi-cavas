@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { getConnInfo } from "hono/bun";
 import { z } from "zod";
@@ -22,10 +22,23 @@ export async function me(user: User) {
 const email = z.string().trim().email().transform((value) => value.toLowerCase());
 const registerInput = z.object({ email, password: z.string().min(8), name: z.string().trim().min(1).max(40), inviteToken: z.string().optional() });
 
+function clientIp(c: Context<AppEnv>) {
+  let socketIp: string | undefined;
+  try { socketIp = getConnInfo(c).remote.address; } catch { /* In-process HTTP tests have no socket. */ }
+  return resolveClientIp(socketIp, c.req.header("X-Real-IP"), env.TRUST_PROXY);
+}
+
 export const authRoutes = new Hono<AppEnv>();
+// 注册即赠送点数，按 IP 限制注册频率防止批量套取。凭邀请链接注册不计入：无效邀请会让整个注册事务回滚，不会创建账号。
+const signupLimiter = createRateLimiter(() => env.SIGNUP_RATE_LIMIT_PER_HOUR, 60 * 60 * 1000);
 authRoutes.post("/register", async (c) => {
   const input = registerInput.parse(await c.req.json());
   invariant(env.ALLOW_SIGNUP || input.inviteToken, 403, "signup_disabled", "注册已关闭，请使用邀请链接");
+  if (env.SIGNUP_RATE_LIMIT_PER_HOUR && !input.inviteToken) {
+    const ip = clientIp(c);
+    signupLimiter.check(ip);
+    signupLimiter.hit(ip);
+  }
   const passwordHash = await Bun.password.hash(input.password, "argon2id");
   const token = randomToken();
   let user: User;
@@ -53,9 +66,7 @@ authRoutes.post("/register", async (c) => {
 const failedLogin = createRateLimiter(10, 5 * 60 * 1000);
 authRoutes.post("/login", async (c) => {
   const input = z.object({ email, password: z.string().min(1) }).parse(await c.req.json());
-  let socketIp: string | undefined;
-  try { socketIp = getConnInfo(c).remote.address; } catch { /* In-process HTTP tests have no socket. */ }
-  const ip = resolveClientIp(socketIp, c.req.header("X-Real-IP"), env.TRUST_PROXY);
+  const ip = clientIp(c);
   failedLogin.check(ip);
   const [user] = await db.select().from(users).where(eq(users.email, input.email));
   const valid = user && await Bun.password.verify(input.password, user.passwordHash);

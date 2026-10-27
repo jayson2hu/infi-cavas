@@ -7,3 +7,4 @@ process.env.APP_SECRET ??= randomBytes(32).toString("hex");
 process.env.S3_ENDPOINT ??= "http://127.0.0.1:9000";
 process.env.S3_ACCESS_KEY ??= "test-only";
 process.env.S3_SECRET_KEY ??= "test-only";
+process.env.SIGNUP_RATE_LIMIT_PER_HOUR ??= "0"; // 测试进程内所有请求共用同一 IP，默认关闭，专项测试单独开启。

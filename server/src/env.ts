@@ -19,6 +19,8 @@ export const envSchema = z.object({
   S3_FORCE_PATH_STYLE: boolean.default(true),
   BILLING_ENABLED: boolean.default(true),
   SIGNUP_BONUS_CREDITS: z.coerce.number().int().nonnegative().max(2147483647).default(200),
+  // 每个 IP 每小时可注册次数，0 表示不限；凭邀请链接注册不计入。
+  SIGNUP_RATE_LIMIT_PER_HOUR: z.coerce.number().int().nonnegative().default(5),
   ALLOW_SIGNUP: boolean.default(true),
   ADMIN_EMAILS: z.string().default("").transform((value) => value.split(",").map((email) => email.trim().toLowerCase()).filter(Boolean)),
   MODERATION_BLOCKLIST: z.string().default("").transform((value) => value.split(",").map((word) => word.trim()).filter(Boolean)),

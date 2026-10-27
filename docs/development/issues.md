@@ -43,7 +43,7 @@
 | I-033 | MinIO 官方自 2025-10 起停止在 Docker Hub 发布镜像，`minio/minio:RELEASE.2025-09-07T16-13-09Z` 已无法拉取（pull access denied），compose 在任何新机器上都起不来；原健康检查还依赖镜像内 curl | 经用户确认改用社区维护分支 `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`（与原版命令、环境变量一致，自带 mc），健康检查改为 `mc ready local`。实测镜像可拉取、`mc ready local` 返回就绪。整套 compose 冒烟见后续验收。 |
 | I-035 | MinIO 不支持桶级 CORS 接口，`ensureBucket()` 调用 PutBucketCors 返回 501 NotImplemented，启动初始化失败，server 容器无法启动（原版与 pgsty 分支相同；此前验收使用的是其他 S3 协议测试服务） | `ensureBucket()` 对 501 视为由服务端统一配置 CORS 并继续；compose 为 MinIO 设置 `MINIO_API_CORS_ALLOW_ORIGIN=${APP_ORIGIN}`，实测仅放行站点来源、其他来源预检被拒。bootstrap 集成测试兼容两类 S3。真实 PG + MinIO 下后端 101 项全部通过。已解决。 |
 | I-036 | 计费页每日消耗图只有少数天数据时，柱子按 flex:1 撑满整行（1 天时变成整块黑色矩形），与设计稿不符 | 柱宽上限 36px（`billing.css`）；真实部署中替换前端资源后截图确认单柱显示正常。已解决。 |
-| I-037 | 注册即送点数且注册接口无限流、无邮箱验证，可批量注册套取点数，接入付费供应商后形成直接成本 | 涉及新的边界值，待用户确认方案（注册按 IP 限流，或邮箱验证后再发放赠送点数）。开放。 |
+| I-037 | 注册即送点数且注册接口无限流、无邮箱验证，可批量注册套取点数，接入付费供应商后形成直接成本 | 经用户确认先按 IP 限流：`SIGNUP_RATE_LIMIT_PER_HOUR` 默认每 IP 每小时 5 次（0 不限），超出返回 429 且不创建账号、不发点；凭有效邀请注册不计入，无效邀请整体回滚无法绕过。`signup-rate-limit.integration.test.ts` 通过，后端 102 项全部通过。邮箱验证需邮件服务与用户表字段，另行确认。已解决（限流部分）。 |
 
 ## 记录原则
 

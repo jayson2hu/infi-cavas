@@ -77,6 +77,7 @@ Web nginx 的 `/api/` 转发到内部 `server:8787`，关闭响应和请求缓�
 | `BRAND_NAME` | 可选产品显示名称，保留原项目署名 |
 | `BILLING_ENABLED` | 默认 true；false 时只记用量、不扣平台点数 |
 | `SIGNUP_BONUS_CREDITS` | 默认赠送 200 点 |
+| `SIGNUP_RATE_LIMIT_PER_HOUR` | 每个 IP 每小时最多注册次数，默认 5，0 表示不限；凭邀请链接注册不计入。部署在反向代理后需设 `TRUST_PROXY=true` 才能按真实 IP 计算 |
 | `ALLOW_SIGNUP` | 默认 true，可关闭公开注册 |
 | `MODERATION_BLOCKLIST` | 可选平台禁用内容词，逗号分隔，与品牌提示规则独立 |
 | `ANALYTICS_GA4_ID` / `ANALYTICS_BAIDU_ID` | 默认为空，默认不加载统计脚本 |
