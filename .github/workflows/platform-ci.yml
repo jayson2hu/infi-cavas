@@ -1,0 +1,97 @@
+name: Platform CI
+
+# 平台二开的自动验收：类型检查、全量测试（真实 PostgreSQL + MinIO）、前端构建，以及干净机器上的 docker compose 部署冒烟。
+on:
+  push:
+    branches: [dev, "fix/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: ic, POSTGRES_PASSWORD: ic, POSTGRES_DB: ic_test }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U ic -d ic_test" --health-interval 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://ic:ic@127.0.0.1:5432/ic_test
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_ACCESS_KEY: test-only
+      S3_SECRET_KEY: test-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=test-only -e MINIO_ROOT_PASSWORD=test-only pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /data
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:9000/minio/health/live && break; sleep 2; done
+      - run: bun install --frozen-lockfile
+        working-directory: server
+      - run: bun run typecheck
+        working-directory: server
+      - run: bun test
+        working-directory: server
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - run: bun install --frozen-lockfile
+        working-directory: web
+      - run: bun run typecheck
+        working-directory: web
+      - run: bun test
+        working-directory: web
+      - run: bun run build
+        working-directory: web
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    needs: [server, web]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write .env with random secrets
+        run: |
+          gen() { openssl rand -hex "$1"; }
+          PG=$(gen 24)
+          cat > .env <<EOF
+          POSTGRES_PASSWORD=$PG
+          DATABASE_URL=postgres://ic:$PG@postgres:5432/ic
+          APP_SECRET=$(gen 32)
+          S3_ACCESS_KEY=$(gen 10)
+          S3_SECRET_KEY=$(gen 24)
+          APP_ORIGIN=http://localhost:3000
+          ADMIN_EMAILS=admin@example.com
+          EOF
+      - name: Start the full stack
+        run: |
+          docker compose up -d --build
+          for i in $(seq 1 120); do curl -sf http://localhost:3000/api/health && exit 0; sleep 5; done
+          echo "stack did not become healthy in 10 minutes"; docker compose ps; exit 1
+      - name: Smoke test through nginx
+        run: |
+          set -e
+          curl -sf http://localhost:3000/ | grep -qi "<html"
+          curl -sf http://localhost:3000/config.js | grep -q "PLATFORM_API_BASE"
+          curl -sf http://localhost:3000/api/health | grep -q '"ok":true'
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/api/auth/register -H "Content-Type: application/json" -d '{"email":"x@example.com","password":"password123","name":"x"}')
+          test "$code" = "403"   # 缺少 Origin 必须被拒绝
+          curl -sf -c jar -X POST http://localhost:3000/api/auth/register -H "Origin: http://localhost:3000" -H "Content-Type: application/json" -d '{"email":"admin@example.com","password":"password123","name":"admin"}' > me.json
+          grep -q '"isPlatformAdmin":true' me.json
+          curl -sf -b jar http://localhost:3000/api/billing/summary | grep -q '"balance":200'
+          curl -sf -b jar http://localhost:3000/api/templates | grep -q "tpl_"
+          curl -sf -b jar http://localhost:3000/api/gateway/v1/models | grep -q '"object":"list"'
+          echo "compose smoke passed"
+      - if: failure()
+        run: docker compose logs --no-color | tail -200
+      - if: always()
+        run: docker compose down -v
