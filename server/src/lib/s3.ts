@@ -20,7 +20,13 @@ export async function ensureBucket() {
       await s3.send(new HeadBucketCommand({ Bucket: env.S3_BUCKET }));
     }
   }
-  await s3.send(new PutBucketCorsCommand({ Bucket: env.S3_BUCKET, CORSConfiguration: { CORSRules: [{ AllowedOrigins: [new URL(env.APP_ORIGIN).origin], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["content-type", "content-length", "x-amz-*"], ExposeHeaders: ["ETag"] }] } }));
+  try {
+    await s3.send(new PutBucketCorsCommand({ Bucket: env.S3_BUCKET, CORSConfiguration: { CORSRules: [{ AllowedOrigins: [new URL(env.APP_ORIGIN).origin], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["content-type", "content-length", "x-amz-*"], ExposeHeaders: ["ETag"] }] } }));
+  } catch (error) {
+    // MinIO 不支持桶级 CORS 接口（返回 501），跨域由服务端 MINIO_API_CORS_ALLOW_ORIGIN 统一配置。
+    if ((error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode !== 501) throw error;
+    console.info(JSON.stringify({ event: "bucket_cors_managed_by_server" }));
+  }
 }
 export const headObject = (objectKey: string) => s3.send(new HeadObjectCommand({ Bucket: env.S3_BUCKET, Key: objectKey }));
 export const deleteObject = (objectKey: string) => s3.send(new DeleteObjectCommand({ Bucket: env.S3_BUCKET, Key: objectKey }));

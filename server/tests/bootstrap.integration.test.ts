@@ -53,7 +53,12 @@ integration("三个独立进程首次启动等待同一PG迁移锁，初始化�
   expect((await client`select count(*)::int as count from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'`)[0].count).toBe(23);
   expect((await client`select count(*)::int as count from drizzle.__drizzle_migrations`)[0].count).toBe(1);
   expect((await client`select count(*)::int as count from templates`)[0].count).toBe(6);
-  expect((await s3.send(new GetBucketCorsCommand({ Bucket: bucket }))).CORSRules?.[0].AllowedOrigins).toEqual([new URL(env.APP_ORIGIN).origin]);
+  // 支持桶级 CORS 的 S3 应写入站点来源；MinIO 不支持该接口（由 MINIO_API_CORS_ALLOW_ORIGIN 配置），启动仍须成功。
+  const cors = await s3.send(new GetBucketCorsCommand({ Bucket: bucket })).catch((error: { name?: string }) => {
+    if (error.name !== "NoSuchCORSConfiguration") throw error;
+    return null;
+  });
+  if (cors) expect(cors.CORSRules?.[0].AllowedOrigins).toEqual([new URL(env.APP_ORIGIN).origin]);
   await client`update models set display_name = '运营修改', is_active = false where id = 'gpt-image-2'`;
   await client`update pricing_rules set config = ${client.json({ standard: 9, hd: 18 })} where model_id = 'gpt-image-2'`;
   await client`update templates set name = '运营模板', use_count = 31, is_published = false where id = 'tpl_ecom_main_set'`;
