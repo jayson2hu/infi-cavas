@@ -36,6 +36,15 @@ jobs:
         working-directory: server
       - run: bun run typecheck
         working-directory: server
+      - name: Migrate test database and create bucket
+        working-directory: server
+        env:
+          DATABASE_URL: postgres://ic:ic@127.0.0.1:5432/ic_test
+          APP_ORIGIN: http://localhost:3000
+          APP_SECRET: ci-only-secret-0123456789abcdef0123456789abcdef
+        run: |
+          bun run db:migrate
+          bun scripts/ensure-bucket.ts
       - run: bun test
         working-directory: server
 
