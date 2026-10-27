@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import i18n from "@/i18n";
 import { modelPriceRule, formatPriceHint } from "@/lib/platform-pricing";
+import { isByokAllowed, isPlatformEnabled } from "@/lib/platform";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
@@ -89,7 +90,9 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
 function emptyModelLabel(config: AiConfig, capability?: ModelCapability) {
     const label = capability ? i18n.t(`settingsPanels.model.capabilities.${capability}`) : "";
     if (capability && config.models.length) return i18n.t("settingsPanels.model.assign", { capability: label });
-    return config.models.length ? i18n.t("settingsPanels.model.noMatch", { capability: label }) : i18n.t("settingsPanels.model.addFirst");
+    if (config.models.length) return i18n.t("settingsPanels.model.noMatch", { capability: label });
+    // 平台模式关闭自带 Key 时没有"渠道"可配，提示联系管理员开放模型（I-042）。
+    return isPlatformEnabled() && !isByokAllowed() ? i18n.t("platform.noPlatformModel") : i18n.t("settingsPanels.model.addFirst");
 }
 
 function ModelLabel({ config, model }: { config: AiConfig; model: string }) {

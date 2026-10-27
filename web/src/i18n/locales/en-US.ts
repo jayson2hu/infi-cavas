@@ -377,6 +377,7 @@ export default {
         invalidFile: "The settings file format is invalid",
         description: "Providers, model selection, sync, and local storage",
         modalDescription: "Providers, default models, sync, and local storage",
+        descriptionNoKey: "Default models, generation preferences, sync, and local storage",
         tabs: {
             channels: "Providers",
             localProxy: "Local proxy",
@@ -471,6 +472,7 @@ export default {
             runtime: { requestFailed: "Request failed ({{status}})", urlRequired: "JSON URL is required", fetchFailed: "Failed to fetch “{{name}}”: {{error}}", noPrompts: "No valid prompts were parsed from “{{name}}”", invalidRoot: "Invalid “{{name}}” format: the root value must be an array" },
         },
         fileSecurity: "The JSON file contains API keys and WebDAV credentials. Keep it secure.",
+        fileSecurityNoKey: "The JSON file contains WebDAV credentials. Keep it secure.",
         import: "Import settings",
         export: "Export settings",
         imported: "Settings and preferences imported",
