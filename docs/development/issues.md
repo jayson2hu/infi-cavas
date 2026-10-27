@@ -37,6 +37,7 @@
 | I-029 | 官方模板物理删除后，自动seed会在重启时重新创建 | 已用isPublished=false保留固定ID，团队仍物理删除；清理器持锁核对发布状态。删除后seed不复活、图片封面回收、404/403、故障恢复、回滚及锁等待期间重新发布保留对象均通过；完整后端98项/936断言，见m4-backend.md/m5-deployment.md。已解决，无新增表字段。 |
 
 | I-030 | 文档types:check中Next typegen偶发把生成的.source/server.ts留为空，TS2306 | 已调整检查顺序为Next路由类型→完整fumadocs-mdx→tsc；避免后一个生成器破坏前一个的结果，不更换依赖。最终连续两次验证均通过，见m5-docs.md。已解决。 |
+| I-031 | 真实 HTTP 部署时 Bun.serve 默认 10 秒空闲超时会断开生图、SSE 与视频下载（此前验收均经 app.request，未走真实 socket） | 新增 `server/src/lib/serve.ts`，对 `/api/gateway/*` 调用 `server.timeout(req, 0)`，超时仍由上游 AbortSignal 控制；`tests/serve.test.ts` 以真实 Bun.serve 跑 11 秒请求通过。已解决。 |
 
 ## 记录原则
 
