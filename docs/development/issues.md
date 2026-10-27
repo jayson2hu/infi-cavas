@@ -40,6 +40,7 @@
 | I-031 | 真实 HTTP 部署时 Bun.serve 默认 10 秒空闲超时会断开生图、SSE 与视频下载（此前验收均经 app.request，未走真实 socket） | 新增 `server/src/lib/serve.ts`，对 `/api/gateway/*` 调用 `server.timeout(req, 0)`，超时仍由上游 AbortSignal 控制；`tests/serve.test.ts` 以真实 Bun.serve 跑 11 秒请求通过。已解决。 |
 | I-032 | 上游多返回图片时按返回数量计费，可能超出用户请求张数并触发补扣 | `actual()` 改为按 min(返回张数, n) 计价，补充单测。已解决。 |
 | I-034 | 模板"运行全部"确认框只显示预计点数，未按 04 规范显示当前余额 | 确认框在平台计费模式下追加当前余额（读 use-credits-store）。web typecheck 通过。已解决。 |
+| I-033 | MinIO 官方自 2025-10 起停止在 Docker Hub 发布镜像，`minio/minio:RELEASE.2025-09-07T16-13-09Z` 已无法拉取（pull access denied），compose 在任何新机器上都起不来；原健康检查还依赖镜像内 curl | 经用户确认改用社区维护分支 `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`（与原版命令、环境变量一致，自带 mc），健康检查改为 `mc ready local`。实测镜像可拉取、`mc ready local` 返回就绪。整套 compose 冒烟见后续验收。 |
 
 ## 记录原则
 
