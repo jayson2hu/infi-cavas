@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { balance, grantInTransaction, lockWorkspace, setPlanInTransaction } from "../billing/ledger";
 import { db, type Transaction } from "../db/client";
-import { redeemCodes, users, workspaces } from "../db/schema";
+import { planUpgradeRequests, plans, redeemCodes, users, workspaces } from "../db/schema";
 import type { AppEnv } from "../lib/context";
 import { invariant } from "../lib/errors";
 import { requirePlatformAdmin, requireSession } from "../middleware/session";
@@ -75,4 +75,63 @@ adminBillingRoutes.post("/redeem-codes", async (c) => {
     await tx.insert(redeemCodes).values(codes.map((code) => ({ code, credits: input.credits, kind: input.kind, maxUses: input.maxUses, validDays: input.validDays ?? null, expiresAt: input.expiresAt ? new Date(input.expiresAt) : null, createdBy: c.get("user").id, note: input.note })));
   });
   return c.json({ codes }, 201);
+});
+
+adminBillingRoutes.get("/plans", async (c) => c.json(await db.select().from(plans).orderBy(plans.sort, plans.id)));
+adminBillingRoutes.put("/plans/:planId", async (c) => {
+  const input = z.object({ name: z.string().trim().min(1).max(40), monthlyCredits: z.number().int().min(0).max(2147483647), priceText: z.string().trim().max(40).nullable().optional(), description: z.string().trim().max(200).nullable().optional(), isActive: z.boolean(), sort: z.number().int().default(0) }).parse(await c.req.json());
+  const planId = c.req.param("planId");
+  const updated = await db.transaction(async (tx) => {
+    await assertAdmin(tx, c.get("user").id);
+    const [row] = await tx.update(plans).set({ ...input, priceText: input.priceText || null, description: input.description || null, updatedAt: new Date() }).where(eq(plans.id, planId)).returning();
+    invariant(row, 404, "plan_not_found", "套餐不存在");
+    return row;
+  });
+  return c.json(updated);
+});
+
+adminBillingRoutes.get("/plan-requests", async (c) => {
+  const status = z.enum(["pending", "approved", "rejected", "all"]).default("pending").parse(c.req.query("status") || undefined);
+  const rows = await db.select({
+    id: planUpgradeRequests.id, workspaceId: planUpgradeRequests.workspaceId, workspaceName: workspaces.name, requesterEmail: users.email,
+    planId: planUpgradeRequests.planId, planName: plans.name, monthlyCredits: plans.monthlyCredits, fromPlan: planUpgradeRequests.fromPlan,
+    note: planUpgradeRequests.note, status: planUpgradeRequests.status, reviewNote: planUpgradeRequests.reviewNote, createdAt: planUpgradeRequests.createdAt, reviewedAt: planUpgradeRequests.reviewedAt,
+  }).from(planUpgradeRequests)
+    .innerJoin(workspaces, eq(workspaces.id, planUpgradeRequests.workspaceId))
+    .innerJoin(users, eq(users.id, planUpgradeRequests.userId))
+    .innerJoin(plans, eq(plans.id, planUpgradeRequests.planId))
+    .where(status === "all" ? undefined : eq(planUpgradeRequests.status, status))
+    .orderBy(desc(planUpgradeRequests.createdAt)).limit(200);
+  return c.json(rows);
+});
+
+async function lockPendingRequest(tx: Transaction, requestId: string) {
+  const [request] = await tx.select().from(planUpgradeRequests).where(eq(planUpgradeRequests.id, requestId)).for("update");
+  invariant(request, 404, "request_not_found", "申请不存在");
+  invariant(request.status === "pending", 409, "request_closed", "该申请已处理");
+  return request;
+}
+adminBillingRoutes.post("/plan-requests/:requestId/approve", async (c) => {
+  const input = z.object({ note: z.string().trim().max(500).optional() }).parse(await c.req.json().catch(() => ({})));
+  const userId = c.get("user").id;
+  const result = await db.transaction(async (tx) => {
+    await assertAdmin(tx, userId);
+    const request = await lockPendingRequest(tx, c.req.param("requestId"));
+    const [plan] = await tx.select().from(plans).where(eq(plans.id, request.planId));
+    // 以批准时的套餐额度为准，管理员可先在套餐目录里调整再批准。
+    const workspace = await setPlanInTransaction(tx, request.workspaceId, plan.id as "free" | "team" | "enterprise", plan.monthlyCredits, userId);
+    await tx.update(planUpgradeRequests).set({ status: "approved", reviewedBy: userId, reviewNote: input.note || null, reviewedAt: new Date() }).where(eq(planUpgradeRequests.id, request.id));
+    return { workspace, ...await balance(request.workspaceId, tx) };
+  });
+  return c.json(result);
+});
+adminBillingRoutes.post("/plan-requests/:requestId/reject", async (c) => {
+  const input = z.object({ reason: z.string().trim().min(1).max(500) }).parse(await c.req.json());
+  const userId = c.get("user").id;
+  await db.transaction(async (tx) => {
+    await assertAdmin(tx, userId);
+    const request = await lockPendingRequest(tx, c.req.param("requestId"));
+    await tx.update(planUpgradeRequests).set({ status: "rejected", reviewedBy: userId, reviewNote: input.reason, reviewedAt: new Date() }).where(eq(planUpgradeRequests.id, request.id));
+  });
+  return c.body(null, 204);
 });

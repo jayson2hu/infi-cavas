@@ -3,10 +3,11 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { balance, redeem } from "../billing/ledger";
 import { db } from "../db/client";
-import { creditPackages, creditTransactions, generationJobs, generationOutputs, users, workspaceMembers } from "../db/schema";
+import { creditPackages, creditTransactions, generationJobs, generationOutputs, planUpgradeRequests, plans, users, workspaceMembers } from "../db/schema";
 import { env } from "../env";
 import type { AppEnv } from "../lib/context";
 import { ApiError, invariant } from "../lib/errors";
+import { id } from "../lib/ids";
 import { requireSession, requireWorkspace, requireWorkspaceRole } from "../middleware/session";
 
 export { balance } from "../billing/ledger";
@@ -116,3 +117,31 @@ billingRoutes.post("/redeem", requireWorkspaceRole("owner"), async (c) => {
   return c.json(await redeem(c.get("workspace").id, c.get("user").id, code));
 });
 billingRoutes.get("/packages", async (c) => c.json(await db.select({ id: creditPackages.id, name: creditPackages.name, credits: creditPackages.credits, bonusCredits: creditPackages.bonusCredits, priceCents: creditPackages.priceCents }).from(creditPackages).where(eq(creditPackages.isActive, true)).orderBy(creditPackages.sort, creditPackages.id)));
+
+// 套餐升级（I-041）：用户提交申请，平台管理员审核；支付二期接入后由支付回调替代人工审核。
+const planColumns = { id: plans.id, name: plans.name, monthlyCredits: plans.monthlyCredits, priceText: plans.priceText, description: plans.description };
+const requestColumns = { id: planUpgradeRequests.id, planId: planUpgradeRequests.planId, fromPlan: planUpgradeRequests.fromPlan, note: planUpgradeRequests.note, status: planUpgradeRequests.status, reviewNote: planUpgradeRequests.reviewNote, createdAt: planUpgradeRequests.createdAt, reviewedAt: planUpgradeRequests.reviewedAt };
+billingRoutes.get("/plans", async (c) => {
+  const workspace = c.get("workspace");
+  const [catalog, [latest]] = await Promise.all([
+    db.select(planColumns).from(plans).where(eq(plans.isActive, true)).orderBy(plans.sort, plans.id),
+    db.select(requestColumns).from(planUpgradeRequests).where(eq(planUpgradeRequests.workspaceId, workspace.id)).orderBy(desc(planUpgradeRequests.createdAt)).limit(1),
+  ]);
+  return c.json({ currentPlan: workspace.plan, planMonthlyCredits: workspace.planMonthlyCredits, plans: catalog, latestRequest: latest ?? null });
+});
+billingRoutes.post("/plan-requests", requireWorkspaceRole("owner", "admin"), async (c) => {
+  invariant(env.BILLING_ENABLED, 403, "billing_disabled", "当前部署未开启计费");
+  const input = z.object({ planId: z.enum(["free", "team", "enterprise"]), note: z.string().trim().max(500).optional() }).parse(await c.req.json());
+  const workspace = c.get("workspace");
+  const [plan] = await db.select({ id: plans.id }).from(plans).where(and(eq(plans.id, input.planId), eq(plans.isActive, true)));
+  invariant(plan, 404, "plan_not_found", "套餐不存在或已下架");
+  invariant(plan.id !== workspace.plan, 409, "same_plan", "已经是该套餐");
+  try {
+    const [created] = await db.insert(planUpgradeRequests).values({ id: id("pur"), workspaceId: workspace.id, userId: c.get("user").id, planId: plan.id, fromPlan: workspace.plan, note: input.note || null }).returning(requestColumns);
+    return c.json(created, 201);
+  } catch (error) {
+    const cause = (error as { cause?: { code?: string } }).cause ?? error as { code?: string };
+    if (cause.code === "23505") throw new ApiError(409, "request_pending", "已有待处理的升级申请");
+    throw error;
+  }
+});

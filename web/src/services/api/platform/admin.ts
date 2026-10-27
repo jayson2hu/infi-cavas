@@ -21,3 +21,11 @@ export const grantWorkspace = async (id: string, input: GrantInput) => { await p
 export const setWorkspacePlan = async (id: string, input: { plan: Workspace["plan"]; monthlyCredits: number }) => { await platformApi.put(`${path("workspaces", id)}/plan`, input); };
 export const listRedeemCodes = async (signal?: AbortSignal) => (await platformApi.get<RedeemCode[]>("/admin/redeem-codes", { signal })).data;
 export const createRedeemCodes = async (input: RedeemCodeInput) => (await platformApi.post<{ codes: string[] }>("/admin/redeem-codes", input)).data;
+export type AdminPlan = { id: Workspace["plan"]; name: string; monthlyCredits: number; priceText: string | null; description: string | null; isActive: boolean; sort: number; updatedAt: string };
+export type AdminPlanInput = Omit<AdminPlan, "id" | "updatedAt">;
+export type AdminPlanRequest = { id: string; workspaceId: string; workspaceName: string; requesterEmail: string; planId: Workspace["plan"]; planName: string; monthlyCredits: number; fromPlan: Workspace["plan"]; note: string | null; status: "pending" | "approved" | "rejected"; reviewNote: string | null; createdAt: string; reviewedAt: string | null };
+export const listAdminPlans = async (signal?: AbortSignal) => (await platformApi.get<AdminPlan[]>("/admin/plans", { signal })).data;
+export const saveAdminPlan = async (id: string, input: AdminPlanInput) => (await platformApi.put<AdminPlan>(path("plans", id), input)).data;
+export const listPlanRequests = async (status: AdminPlanRequest["status"] | "all", signal?: AbortSignal) => (await platformApi.get<AdminPlanRequest[]>("/admin/plan-requests", { params: { status }, signal })).data;
+export const approvePlanRequest = async (id: string, note?: string) => { await platformApi.post(`${path("plan-requests", id)}/approve`, { note }); };
+export const rejectPlanRequest = async (id: string, reason: string) => { await platformApi.post(`${path("plan-requests", id)}/reject`, { reason }); };

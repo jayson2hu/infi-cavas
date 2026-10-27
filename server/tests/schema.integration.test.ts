@@ -79,7 +79,7 @@ async function inspectSchema(client: Pick<postgres.Sql, "unsafe">, namespace: st
   };
 }
 
-schemaTest("PostgreSQL 迁移结果与 specs/schema.sql 的 23 张表完整等价（需 TEST_DATABASE_URL）", async () => {
+schemaTest("PostgreSQL 迁移结果与 specs/schema.sql 的 25 张表完整等价（需 TEST_DATABASE_URL）", async () => {
   const client = postgres(databaseUrl!, { max: 1, onnotice: () => {} });
   const referenceSchema = `schema_spec_${randomUUID().replaceAll("-", "")}`;
   try {
@@ -97,7 +97,7 @@ schemaTest("PostgreSQL 迁移结果与 specs/schema.sql 的 23 张表完整等�
       await tx`DROP SCHEMA ${tx(referenceSchema)} CASCADE`;
       return { reference, migrated };
     });
-    expect(reference.tables).toHaveLength(23);
+    expect(reference.tables).toHaveLength(25);
     expect(migrated.tables).toEqual(reference.tables);
     expect(migrated.columns).toEqual(reference.columns);
     expect(migrated.constraints).toEqual(reference.constraints);

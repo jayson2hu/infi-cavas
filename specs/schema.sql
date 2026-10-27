@@ -229,6 +229,35 @@ CREATE TABLE credit_packages (
   sort          integer NOT NULL DEFAULT 0
 );
 
+-- 订阅套餐目录（I-041）：id 与 workspaces.plan 一致；price_text 仅展示，支付二期接入
+CREATE TABLE plans (
+  id              text PRIMARY KEY CHECK (id IN ('free','team','enterprise')),
+  name            text NOT NULL,
+  monthly_credits integer NOT NULL CHECK (monthly_credits >= 0),
+  price_text      text,
+  description     text,
+  is_active       boolean NOT NULL DEFAULT true,
+  sort            integer NOT NULL DEFAULT 0,
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+
+-- 套餐升级申请（I-041）：管理员批准后切换套餐并发放当期点数
+CREATE TABLE plan_upgrade_requests (
+  id            text PRIMARY KEY,                      -- pur_
+  workspace_id  text NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  user_id       text NOT NULL REFERENCES users(id),
+  plan_id       text NOT NULL REFERENCES plans(id),
+  from_plan     text NOT NULL,
+  note          text,
+  status        text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  reviewed_by   text REFERENCES users(id),
+  review_note   text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  reviewed_at   timestamptz
+);
+CREATE UNIQUE INDEX plan_upgrade_requests_pending_key ON plan_upgrade_requests(workspace_id) WHERE status = 'pending';
+CREATE INDEX plan_upgrade_requests_status_idx ON plan_upgrade_requests(status, created_at);
+
 CREATE TABLE payment_orders (
   id            text PRIMARY KEY,                      -- ord_
   workspace_id  text NOT NULL REFERENCES workspaces(id),

@@ -10,6 +10,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // 与 specs/schema.sql 保持一致；这里不添加应用层才有的验证或默认值。
@@ -291,6 +292,44 @@ export const creditPackages = pgTable("credit_packages", {
   isActive: boolean("is_active").notNull().default(true),
   sort: integer("sort").notNull().default(0),
 });
+
+// 订阅套餐目录：id 与 workspaces.plan 取值一致，管理员维护每月点数与价格说明（支付二期接入）。
+export const plans = pgTable("plans", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  monthlyCredits: integer("monthly_credits").notNull(),
+  priceText: text("price_text"),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  sort: integer("sort").notNull().default(0),
+  updatedAt: time("updated_at").notNull().defaultNow(),
+}, (t) => [
+  check("plans_id_check", sql`${t.id} IN ('free','team','enterprise')`),
+  check("plans_monthly_credits_check", sql`${t.monthlyCredits} >= 0`),
+]);
+
+// 用户提交的升级申请；管理员批准后切换套餐并发放当期点数。每个工作区同时只能有一条待处理申请。
+export const planUpgradeRequests = pgTable("plan_upgrade_requests", {
+  id: text("id").primaryKey(),
+  workspaceId: text("workspace_id").notNull(),
+  userId: text("user_id").notNull(),
+  planId: text("plan_id").notNull(),
+  fromPlan: text("from_plan").notNull(),
+  note: text("note"),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+  reviewedBy: text("reviewed_by"),
+  reviewNote: text("review_note"),
+  createdAt: time("created_at").notNull().defaultNow(),
+  reviewedAt: time("reviewed_at"),
+}, (t) => [
+  foreignKey({ name: "plan_upgrade_requests_workspace_id_fkey", columns: [t.workspaceId], foreignColumns: [workspaces.id] }).onDelete("cascade"),
+  foreignKey({ name: "plan_upgrade_requests_user_id_fkey", columns: [t.userId], foreignColumns: [users.id] }),
+  foreignKey({ name: "plan_upgrade_requests_plan_id_fkey", columns: [t.planId], foreignColumns: [plans.id] }),
+  foreignKey({ name: "plan_upgrade_requests_reviewed_by_fkey", columns: [t.reviewedBy], foreignColumns: [users.id] }),
+  check("plan_upgrade_requests_status_check", sql`${t.status} IN ('pending','approved','rejected')`),
+  uniqueIndex("plan_upgrade_requests_pending_key").on(t.workspaceId).where(sql`${t.status} = 'pending'`),
+  index("plan_upgrade_requests_status_idx").on(t.status, t.createdAt),
+]);
 
 export const paymentOrders = pgTable("payment_orders", {
   id: text("id").primaryKey(),

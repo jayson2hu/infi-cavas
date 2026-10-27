@@ -312,6 +312,17 @@ paths:
       tags: [billing]
       responses: { "200": { description: 充值包（第 2 期支付使用；MVP 前端仅展示并提示联系管理员）, content: { application/json: { schema: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, credits: { type: integer }, bonusCredits: { type: integer }, priceCents: { type: integer } } } } } } } }
 
+  /billing/plans:
+    get:
+      tags: [billing]
+      responses: { "200": { description: "套餐目录（仅上架）+ 当前套餐 + 最近一次升级申请（I-041）", content: { application/json: { schema: { type: object, properties: { currentPlan: { enum: [free, team, enterprise] }, planMonthlyCredits: { type: integer }, plans: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, monthlyCredits: { type: integer }, priceText: { type: [string, "null"] }, description: { type: [string, "null"] } } } }, latestRequest: { type: [object, "null"], properties: { id: { type: string }, planId: { type: string }, fromPlan: { type: string }, status: { enum: [pending, approved, rejected] }, note: { type: [string, "null"] }, reviewNote: { type: [string, "null"] }, createdAt: { type: string }, reviewedAt: { type: [string, "null"] } } } } } } } } }
+  /billing/plan-requests:
+    post:
+      tags: [billing]
+      description: owner/admin 提交套餐升级申请，由平台管理员审核；每个工作区同时只能有一条待处理申请。支付二期接入后由支付回调替代人工审核。
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [planId], properties: { planId: { enum: [free, team, enterprise] }, note: { type: string, maxLength: 500 } } } } } }
+      responses: { "201": { description: 已提交 }, "403": { description: 非 owner/admin 或未开启计费 }, "404": { description: 套餐不存在或已下架 }, "409": { description: "same_plan | request_pending" } }
+
   /uploads/presign:
     post:
       tags: [uploads]
@@ -398,6 +409,32 @@ paths:
       tags: [admin]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [credits, kind, count], properties: { credits: { type: integer }, kind: { enum: [purchase, gift] }, count: { type: integer, maximum: 500 }, maxUses: { type: integer, default: 1 }, validDays: { type: [integer, "null"] }, expiresAt: { type: [string, "null"] }, note: { type: string } } } } } }
       responses: { "201": { description: "{ codes: string[] }（可导出 CSV）" } }
+
+  /admin/plans:
+    get: { tags: [admin], responses: { "200": { description: 全部套餐（含下架） } } }
+  /admin/plans/{planId}:
+    put:
+      tags: [admin]
+      parameters: [{ name: planId, in: path, required: true, schema: { enum: [free, team, enterprise] } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name, monthlyCredits, isActive], properties: { name: { type: string, maxLength: 40 }, monthlyCredits: { type: integer, minimum: 0 }, priceText: { type: [string, "null"], maxLength: 40 }, description: { type: [string, "null"], maxLength: 200 }, isActive: { type: boolean }, sort: { type: integer } } } } } }
+      responses: { "200": { description: 已保存 }, "404": { description: 套餐不存在 } }
+  /admin/plan-requests:
+    get:
+      tags: [admin]
+      parameters: [{ name: status, in: query, schema: { enum: [pending, approved, rejected, all], default: pending } }]
+      responses: { "200": { description: "申请列表（最近 200 条），含工作区名、申请人邮箱、目标套餐与额度" } }
+  /admin/plan-requests/{requestId}/approve:
+    post:
+      tags: [admin]
+      parameters: [{ name: requestId, in: path, required: true, schema: { type: string } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { note: { type: string } } } } } }
+      responses: { "200": { description: "按当时套餐额度切换套餐并发放当期订阅点数；返回 { workspace, balance, ... }" }, "409": { description: 申请已处理 } }
+  /admin/plan-requests/{requestId}/reject:
+    post:
+      tags: [admin]
+      parameters: [{ name: requestId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 1 } } } } } }
+      responses: { "204": { description: 已拒绝 }, "409": { description: 申请已处理 } }
 
 components:
   securitySchemes:

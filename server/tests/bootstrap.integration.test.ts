@@ -50,8 +50,8 @@ integration("三个独立进程首次启动等待同一PG迁移锁，初始化�
     expect((await client`select to_regclass('public.users') as table_name`)[0].table_name).toBeNull();
   } finally { await holder`select pg_advisory_unlock(71423, 0)`; holder.release(); }
   for (const result of await Promise.all(pending)) { expect(result.code).toBe(0); expect(result.output).toContain('"event":"bootstrap_ready"'); }
-  expect((await client`select count(*)::int as count from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'`)[0].count).toBe(23);
-  expect((await client`select count(*)::int as count from drizzle.__drizzle_migrations`)[0].count).toBe(1);
+  expect((await client`select count(*)::int as count from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'`)[0].count).toBe(25);
+  expect((await client`select count(*)::int as count from drizzle.__drizzle_migrations`)[0].count).toBe(2);
   expect((await client`select count(*)::int as count from templates`)[0].count).toBe(6);
   // 支持桶级 CORS 的 S3 应写入站点来源；MinIO 不支持该接口（由 MINIO_API_CORS_ALLOW_ORIGIN 配置），启动仍须成功。
   const cors = await s3.send(new GetBucketCorsCommand({ Bucket: bucket })).catch((error: { name?: string }) => {
