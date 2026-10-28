@@ -7,12 +7,13 @@ import { usePromptSourceStore } from "@/stores/use-prompt-source-store";
 const CHECK_INTERVAL_MS = 60_000;
 
 /** Periodically update only the sources whose last successful refresh is due. */
-export function usePromptSourceScheduler() {
+export function usePromptSourceScheduler(enabled = true) {
     const queryClient = useQueryClient();
     const intervalMinutes = usePromptSourceStore((state) => state.schedule.intervalMinutes);
 
     useEffect(() => {
-        if (!intervalMinutes) return;
+        // 提示词库关闭时不在后台请求 GitHub 上的提示词源。
+        if (!enabled || !intervalMinutes) return;
         let running = false;
         const tick = async () => {
             if (running) return;
@@ -36,5 +37,5 @@ export function usePromptSourceScheduler() {
         void tick();
         const timer = window.setInterval(() => void tick(), CHECK_INTERVAL_MS);
         return () => window.clearInterval(timer);
-    }, [intervalMinutes, queryClient]);
+    }, [enabled, intervalMinutes, queryClient]);
 }

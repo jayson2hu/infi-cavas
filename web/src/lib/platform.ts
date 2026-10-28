@@ -1,4 +1,4 @@
-import { ALLOW_BYOK, PLATFORM_API_BASE } from "@/constant/runtime-config";
+import { ALLOW_BYOK, PLATFORM_API_BASE, PROMPT_LIBRARY } from "@/constant/runtime-config";
 import type { AiConfig } from "@/stores/use-config-store";
 import { useSessionStore } from "@/stores/use-session-store";
 import i18n from "@/i18n";
@@ -8,6 +8,8 @@ export const PLATFORM_CHANNEL_ID = "platform";
 export function isPlatformEnabled() { return Boolean(PLATFORM_API_BASE); }
 /** 平台模式下模型 Key 由管理后台统一管理；只有显式开启 ALLOW_BYOK（私有化部署）时用户才能自带 Key。纯前端模式始终可用。 */
 export function isByokAllowed() { return !isPlatformEnabled() || ALLOW_BYOK; }
+/** 提示词库内容来自 GitHub 上的第三方社区仓库，平台不可控、内网常常访问不到：平台模式默认关闭，私有化部署可用 PROMPT_LIBRARY=true 开启。纯前端模式始终可用。 */
+export function isPromptLibraryEnabled() { return !isPlatformEnabled() || PROMPT_LIBRARY; }
 /** 本地 Agent（连接用户电脑上的 Codex）面向开发者：平台模式下仅平台管理员可见。 */
 export function useLocalAgentAllowed() {
     const admin = useSessionStore((state) => Boolean(state.user?.isPlatformAdmin));

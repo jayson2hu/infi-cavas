@@ -8,7 +8,7 @@ import { AgentPanel } from "@/components/agent/agent-panel";
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { VersionReleaseModal } from "@/components/layout/version-release-modal";
-import { useLocalAgentAllowed } from "@/lib/platform";
+import { isPromptLibraryEnabled, useLocalAgentAllowed } from "@/lib/platform";
 import { BRAND_NAME } from "@/constant/runtime-config";
 import { createWorkspace } from "@/services/api/platform/workspaces";
 import { fetchBillingSummary } from "@/services/api/platform/billing";
@@ -19,7 +19,7 @@ import { useCreditsStore } from "@/stores/use-credits-store";
 import { CreditsBadge } from "@/components/billing/credits-badge";
 import { BrandSelector } from "@/components/brand/brand-selector";
 
-const primaryNavigation = [{ path: "/", key: "home", icon: Home }, { path: "/canvas", key: "canvas", icon: LayoutGrid }, { path: "/templates", key: "templates", icon: LayoutGrid }, { path: "/brand", key: "brand", icon: Images }, { path: "/assets", key: "assets", icon: Images }, { path: "/prompts", key: "prompts", icon: FileText }];
+const primaryNavigation = [{ path: "/", key: "home", icon: Home }, { path: "/canvas", key: "canvas", icon: LayoutGrid }, { path: "/templates", key: "templates", icon: LayoutGrid }, { path: "/brand", key: "brand", icon: Images }, { path: "/assets", key: "assets", icon: Images }].concat(isPromptLibraryEnabled() ? [{ path: "/prompts", key: "prompts", icon: FileText }] : []);
 const workspaceNavigation = [{ path: "/team", key: "team", icon: Users }, { path: "/billing", key: "billing", icon: CreditCard }, { path: "/config", key: "config", icon: Settings }];
 
 export default function WorkspaceLayout({ children }: { children?: ReactNode }) {

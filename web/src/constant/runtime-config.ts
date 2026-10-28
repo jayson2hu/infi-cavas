@@ -9,6 +9,7 @@ type RuntimeConfig = {
     PLATFORM_API_BASE?: string;
     BRAND_NAME?: string;
     ALLOW_BYOK?: string; // 平台模式下是否允许用户自带 Key（私有化部署可开启），默认关闭
+    PROMPT_LIBRARY?: string; // 平台模式下是否开启提示词库（内容来自 GitHub 社区仓库），默认关闭
     ANALYTICS_GA4_ID?: string; // GA4 measurement ID (G-XXXX)
     ANALYTICS_BAIDU_ID?: string; // Baidu Analytics site ID
 };
@@ -35,3 +36,4 @@ export const ANALYTICS_BAIDU_ID = read("ANALYTICS_BAIDU_ID", import.meta.env.VIT
 export const PLATFORM_API_BASE = (typeof runtime.PLATFORM_API_BASE === "string" ? runtime.PLATFORM_API_BASE.trim() : import.meta.env.VITE_PLATFORM_API_BASE?.trim() || "").replace(/\/+$/, "");
 export const BRAND_NAME = read("BRAND_NAME", import.meta.env.VITE_BRAND_NAME);
 export const ALLOW_BYOK = read("ALLOW_BYOK", import.meta.env.VITE_ALLOW_BYOK) === "true";
+export const PROMPT_LIBRARY = read("PROMPT_LIBRARY", import.meta.env.VITE_PROMPT_LIBRARY) === "true";

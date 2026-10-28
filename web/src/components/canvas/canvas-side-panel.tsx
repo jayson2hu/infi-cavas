@@ -20,7 +20,7 @@ import { useThemeStore } from "@/stores/use-theme-store";
 import { CanvasNodeType, type CanvasNodeData } from "@/types/canvas";
 
 import type { InsertAssetPayload } from "./asset-picker-modal";
-import { isPlatformEnabled } from "@/lib/platform";
+import { isPlatformEnabled, isPromptLibraryEnabled } from "@/lib/platform";
 import { CanvasBrandTab } from "@/components/brand/canvas-brand-tab";
 import { TemplateLibrary } from "@/components/templates/template-library";
 import type { TemplateInsertion } from "@/services/api/platform/templates";
@@ -108,7 +108,7 @@ export function CanvasSidePanel({ nodes, selectedNodeIds, onFocusNode, onPreview
                 <div className="flex items-center gap-4 overflow-x-auto px-4 pt-3.5">
                     <TabButton label={t("canvas.sidePanel.canvas")} active={tab === "canvas"} theme={theme} onClick={() => setTab("canvas")} />
                     <TabButton label={t("canvas.sidePanel.assets")} active={tab === "assets"} theme={theme} onClick={() => setTab("assets")} />
-                    <TabButton label={t("canvas.sidePanel.prompts")} active={tab === "prompts"} theme={theme} onClick={() => setTab("prompts")} />
+                    {isPromptLibraryEnabled() ? <TabButton label={t("canvas.sidePanel.prompts")} active={tab === "prompts"} theme={theme} onClick={() => setTab("prompts")} /> : null}
                     {isPlatformEnabled() ? <TabButton label={t("platform.brandKit")} active={tab === "brand"} theme={theme} onClick={() => setTab("brand")} /> : null}
                     {isPlatformEnabled() ? <TabButton label={t("platform.templateCenter")} active={tab === "templates"} theme={theme} onClick={() => setTab("templates")} /> : null}
                 </div>

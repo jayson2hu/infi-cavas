@@ -78,6 +78,7 @@ Web nginx 的 `/api/` 转发到内部 `server:8787`，关闭响应和请求缓�
 | `BILLING_ENABLED` | 默认 true；false 时只记用量、不扣平台点数 |
 | `SIGNUP_BONUS_CREDITS` | 默认赠送 200 点 |
 | `ALLOW_BYOK` | 平台模式下是否允许用户自带模型 Key，默认 `false`：用户看不到任何 Key 配置，模型由管理后台统一配置；私有化部署可设为 `true` |
+| `PROMPT_LIBRARY` | 平台模式下是否开启提示词库，默认 `false`。提示词库的内容来自 GitHub 上的第三方社区仓库，平台无法审核，内网环境也常常访问不到；关闭时导航、画布侧栏、设置页都不显示提示词库，也不会在后台请求 GitHub。确认网络可达且接受第三方内容时可设为 `true` |
 | `SIGNUP_RATE_LIMIT_PER_HOUR` | 每个 IP 每小时最多注册次数，默认 5，0 表示不限；凭邀请链接注册不计入。部署在反向代理后需设 `TRUST_PROXY=true` 才能按真实 IP 计算 |
 | `ALLOW_SIGNUP` | 默认 true，可关闭公开注册 |
 | `MODERATION_BLOCKLIST` | 可选平台禁用内容词，逗号分隔，与品牌提示规则独立 |

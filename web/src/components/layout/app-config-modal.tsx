@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ModelPicker } from "@/components/model-picker";
 import { videoResolutionOptions } from "@/components/video-settings-panel";
 import { ChannelEditorDrawer } from "@/components/layout/channel-editor-drawer";
-import { isByokAllowed, isPlatformEnabled } from "@/lib/platform";
+import { isByokAllowed, isPlatformEnabled, isPromptLibraryEnabled } from "@/lib/platform";
 import { ConfigLocalProxy } from "@/components/layout/config-local-proxy";
 import { ConfigPromptSources } from "@/components/layout/config-prompt-sources";
 import { ConfigLocalStorage } from "@/components/layout/config-local-storage";
@@ -55,7 +55,8 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
     const { i18n, t } = useTranslation();
     const configInputRef = useRef<HTMLInputElement>(null);
     const byok = isByokAllowed();
-    const startTab: ConfigTabKey = !byok && (initialTab === "channels" || initialTab === "local-proxy") ? "preferences" : initialTab;
+    const promptLibrary = isPromptLibraryEnabled();
+    const startTab: ConfigTabKey = (!byok && (initialTab === "channels" || initialTab === "local-proxy")) || (!promptLibrary && initialTab === "prompt-sources") ? "preferences" : initialTab;
     const [activeTab, setActiveTab] = useState<ConfigTabKey>(startTab);
     const [editingChannelId, setEditingChannelId] = useState("");
     const [testingWebdav, setTestingWebdav] = useState(false);
@@ -302,11 +303,11 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
                             </Form>
                         ),
                     },
-                    {
+                    ...(!promptLibrary ? [] : [{
                         key: "prompt-sources",
                         label: t("config.tabs.promptSources"),
                         children: <ConfigPromptSources />,
-                    },
+                    }]),
                     {
                         key: "webdav",
                         label: "WebDAV",

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 
 import { AnalyticsTracker } from "@/components/layout/analytics-tracker";
 import UserLayout from "@/layouts/user-layout";
@@ -12,7 +12,7 @@ import ImagePage from "@/pages/image";
 import NotFound from "@/pages/not-found";
 import PromptsPage from "@/pages/prompts";
 import VideoPage from "@/pages/video";
-import { isPlatformEnabled } from "@/lib/platform";
+import { isPlatformEnabled, isPromptLibraryEnabled } from "@/lib/platform";
 import { PlatformSessionRoot, RequireSession } from "@/components/layout/platform-session";
 import WorkspaceLayout from "@/layouts/workspace-layout";
 import LoginPage from "@/pages/auth/login";
@@ -48,7 +48,7 @@ export const router = createBrowserRouter(isPlatformEnabled() ? [
                             { path: "/image", element: <ImagePage /> },
                             { path: "/video", element: <VideoPage /> },
                             { path: "/assets", element: <AssetsPage /> },
-                            { path: "/prompts", element: <PromptsPage /> },
+                            { path: "/prompts", element: isPromptLibraryEnabled() ? <PromptsPage /> : <Navigate to="/" replace /> },
                             { path: "/canvas", element: <CanvasPage /> },
                             { path: "/config", element: <ConfigPage /> },
                             { path: "/team", element: <TeamPage /> },
