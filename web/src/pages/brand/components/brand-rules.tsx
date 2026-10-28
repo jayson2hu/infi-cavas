@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { assertBrandSession, fetchBrandPreview, updateBrand, type Brand } from "@/services/api/platform/brands";
 import { useSessionStore } from "@/stores/use-session-store";
 import { decodeChannelModel, useEffectiveConfig } from "@/stores/use-config-store";
+import { isByokAllowed } from "@/lib/platform";
 
 export function BrandRules({ brand, onChanged }: { brand: Brand; onChanged: () => Promise<void> }) {
     const { t } = useTranslation();
@@ -52,5 +53,5 @@ export function BrandPreview({ brand }: { brand: Brand }) {
     useEffect(() => { const timer = setTimeout(() => setDebounced(prompt), 300); return () => clearTimeout(timer); }, [prompt]);
     const params = { prompt: debounced, ...(selected?.channelId === "platform" ? { modelId: selected.model } : { capability: "text" as const }) };
     const query = useQuery({ queryKey: ["platform", "brand-preview", generation, workspaceId, brand.id, brand.updatedAt, params], queryFn: ({ signal }) => fetchBrandPreview(workspaceId, brand.id, params, signal) });
-    return <section className="platform-card"><h2>{t("platform.injectionPreview")}</h2><Input.TextArea className="mt-3" aria-label={t("platform.examplePrompt")} placeholder={t("platform.examplePrompt")} value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={2} />{query.isPending ? <Skeleton className="mt-4" active paragraph={{ rows: 5 }} /> : query.error ? <Alert className="mt-4" type="error" title={query.error.message} action={<Button size="small" onClick={() => void query.refetch()}>{t("platform.retry")}</Button>} /> : <pre className="brand-injection mt-3" aria-live="polite">{query.data?.text}</pre>}<p className="platform-muted mt-3 text-xs">{selected?.channelId === "platform" ? t("platform.brandPreviewReferences", { count: query.data?.attachedReferenceCount || 0 }) : t("platform.brandByokTextOnly")}</p></section>;
+    return <section className="platform-card"><h2>{t("platform.injectionPreview")}</h2><Input.TextArea className="mt-3" aria-label={t("platform.examplePrompt")} placeholder={t("platform.examplePrompt")} value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={2} />{query.isPending ? <Skeleton className="mt-4" active paragraph={{ rows: 5 }} /> : query.error ? <Alert className="mt-4" type="error" title={query.error.message} action={<Button size="small" onClick={() => void query.refetch()}>{t("platform.retry")}</Button>} /> : <pre className="brand-injection mt-3" aria-live="polite">{query.data?.text}</pre>}<p className="platform-muted mt-3 text-xs">{selected?.channelId === "platform" || !isByokAllowed() ? t("platform.brandPreviewReferences", { count: query.data?.attachedReferenceCount || 0 }) : t("platform.brandByokTextOnly")}</p></section>;
 }
